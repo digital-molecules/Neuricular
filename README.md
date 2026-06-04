@@ -1,4 +1,4 @@
-# Neuricular — CNS Drug Candidate Screening Pipeline
+# Neuricular: A CNS Drug Candidate Screening Pipeline
 
 A cheminformatics tool for rapid CNS drug-likeness assessment combining classical
 molecular descriptors, CNS MPO scoring, and machine learning models for
@@ -60,7 +60,7 @@ URLs are unreachable.
 ## Project structure
 
 ---
-Neuricular/
+Neuricular \
 ├── app.py              -- Streamlit UI \
 ├── chem_calc.py        -- Molecular descriptors + CNS MPO \
 ├── ml_model.py         -- Model training (run once) \
@@ -72,7 +72,7 @@ Neuricular/
 ├── explanations.py \
 ├── evaluation.py \
 ├── cns_drugs.py \
-├── schemas.py \
+├── schemas.py
 
 ---
 
