@@ -640,7 +640,7 @@ CNS_DRUG_DATABASE = [
     # ── ALS (Amyotrophic Lateral Sclerosis) ──────────────────────────────────
     {
         "name":      "Riluzole",
-        "smiles":    "NC(=O)c1ccc(OC(F)(F)F)cc1Cl",
+        "smiles":    "C1=CC2=C(C=C1OC(F)(F)F)SC(=N2)N",
         "category":  "ALS",
         "indication":"Amyotrophic lateral sclerosis — extends survival",
         "moa":       "Glutamate release inhibitor; Na⁺ channel blocker; NMDA antagonist",
