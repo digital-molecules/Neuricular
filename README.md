@@ -1,4 +1,4 @@
-# Neuricular — CNS Drug Candidate Screening Pipeline
+# Neuricular: A CNS Drug Candidate Screening Pipeline
 
 A cheminformatics tool for rapid CNS drug-likeness assessment combining classical
 molecular descriptors, CNS MPO scoring, and machine learning models for
