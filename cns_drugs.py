@@ -142,7 +142,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Aripiprazole",
-        "smiles":    "Clc1ccc(N2CCN(CCCOc3ccc4ccccc4c3)CC2)c(Cl)c1",
+        "smiles":    "O=C1CCc2c(N1)cc(cc2)OCCCCN1CCN(CC1)c1cccc(c1Cl)Cl",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder, MDD adjunct",
         "moa":       "Partial D2/D3 agonist, 5-HT2A antagonist",
