@@ -402,7 +402,7 @@ with tab1:
             st.markdown(
                 "<div style='font-family:IBM Plex Sans,sans-serif; font-size:0.82rem; "
                 "color:#6a7a90; margin-bottom:1rem;'>"
-                "Tanimoto similarity against a curated library of ~65 approved CNS drugs "
+                "Tanimoto similarity against a curated library of 90 approved CNS drugs "
                 "spanning psychiatry, neurology, pain, anaesthesia, and addiction medicine. "
                 "Identifies the most structurally related known CNS compounds.</div>",
                 unsafe_allow_html=True,
