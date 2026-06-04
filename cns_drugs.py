@@ -1,7 +1,5 @@
 """
-cns_drugs.py — MetricularPro
-=============================
-Curated reference database of CNS drugs for automated Tanimoto similarity analysis.
+Curated reference database of CNS drugs for automated Tanimoto similarity analysis for Neuricular.
 
 Organised by therapeutic category. Each entry includes:
   - name, smiles, category, indication, bbb_mechanism
