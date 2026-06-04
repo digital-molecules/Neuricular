@@ -1,4 +1,4 @@
-# Neuricular: A CNS Drug Candidate Screening Pipeline
+# Neuricular — CNS Drug Candidate Screening Pipeline
 
 A cheminformatics tool for rapid CNS drug-likeness assessment combining classical
 molecular descriptors, CNS MPO scoring, and machine learning models for
@@ -59,7 +59,7 @@ URLs are unreachable.
 
 ## Project structure
 
-```
+---
 Neuricular/
 ├── app.py              # Streamlit UI
 ├── chem_calc.py        # Molecular descriptors + CNS MPO
@@ -78,8 +78,8 @@ Neuricular/
 
 ## Datasets & References
 
-- **BBBP:** Martins et al., *J. Chem. Inf. Model.* 2012, 52, 1686–1697
-- **ClinTox:** Gayvert et al., *Cell Chem. Biol.* 2016, 23, 1294–1301
-- **CNS MPO:** Wager et al., *ACS Chem. Neurosci.* 2010, 1, 435–449
-- **Lipinski Ro5:** Lipinski et al., *Adv. Drug Deliv. Rev.* 1997, 23, 3–25
-- **Veber:** Veber et al., *J. Med. Chem.* 2002, 45, 2615–2623
+- BBBP: Martins et al., J. Chem. Inf. Model. 2012, 52, 1686–1697
+- ClinTox: Gayvert et al., Cell Chem. Biol. 2016, 23, 1294–1301
+- CNS MPO: Wager et al., ACS Chem. Neurosci. 2010, 1, 435–449
+- Lipinski Ro5: Lipinski et al., Adv. Drug Deliv. Rev. 1997, 23, 3–25
+- Veber: Veber et al., J. Med. Chem. 2002, 45, 2615–2623
