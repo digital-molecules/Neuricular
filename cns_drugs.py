@@ -637,6 +637,145 @@ CNS_DRUG_DATABASE = [
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
+    # ── ALS (Amyotrophic Lateral Sclerosis) ──────────────────────────────────
+    {
+        "name":      "Riluzole",
+        "smiles":    "NC(=O)c1ccc(OC(F)(F)F)cc1Cl",
+        "category":  "ALS",
+        "indication":"Amyotrophic lateral sclerosis — extends survival",
+        "moa":       "Glutamate release inhibitor; Na⁺ channel blocker; NMDA antagonist",
+        "bbb_mechanism": "Passive transcellular diffusion (high lipophilicity)",
+    },
+    {
+        "name":      "Edaravone",
+        "smiles":    "Cc1cc(=O)n(-c2ccccc2)n1",
+        "category":  "ALS",
+        "indication":"ALS — free radical scavenger (approved in Japan/US)",
+        "moa":       "Reactive oxygen species scavenger",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+    # Tofersen is an antisense oligonucleotide (ASO) — intrathecal delivery only.
+    # Its SMILES represents a simplified phosphorothioate backbone segment.
+    # It does NOT cross the BBB and is included as a CNS-adjacent peripheral control.
+    {
+        "name":      "Tofersen",
+        "smiles":    "O=P(O)(O)OCC1OC(n2ccc(=O)[nH]c2=O)CC1OP(=O)(O)O",
+        "category":  "ALS",
+        "indication":"SOD1-ALS — antisense oligonucleotide (intrathecal)",
+        "moa":       "SOD1 mRNA-targeting antisense oligonucleotide — reduces mutant SOD1 protein",
+        "bbb_mechanism": "Does not cross BBB — delivered intrathecally directly to CSF",
+    },
+
+    # ── SMA (Spinal Muscular Atrophy) ─────────────────────────────────────────
+    {
+        "name":      "Risdiplam",
+        "smiles":    "Cc1cc2c(nc1CN1CC[C@@H](O)C1)N(c1ccncc1)C(=O)c1cc(F)ccc1-2",
+        "category":  "SMA",
+        "indication":"Spinal muscular atrophy — oral SMN2 splicing modifier",
+        "moa":       "SMN2 pre-mRNA splicing modifier — increases full-length SMN protein",
+        "bbb_mechanism": "Passive transcellular diffusion — designed for CNS penetration",
+    },
+
+    # ── Huntington's Disease ──────────────────────────────────────────────────
+    {
+        "name":      "Tetrabenazine",
+        "smiles":    "COc1ccc2c(c1)C[C@H]1CC(=O)[C@@H](c3ccc(OC)c(OC)c3)N1CC2",
+        "category":  "Huntington's",
+        "indication":"Huntington's disease chorea, tardive dyskinesia",
+        "moa":       "VMAT2 inhibitor — depletes presynaptic monoamine stores",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+    {
+        "name":      "Deutetrabenazine",
+        "smiles":    "COc1ccc2c(c1)C[C@H]1CC(=O)[C@@H](c3ccc(OC)c(OC([2H])([2H])[2H])c3)N1CC2",
+        "category":  "Huntington's",
+        "indication":"Huntington's disease chorea, tardive dyskinesia",
+        "moa":       "VMAT2 inhibitor — deuterated tetrabenazine analogue (improved PK)",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
+    # ── Multiple Sclerosis (additional) ──────────────────────────────────────
+    {
+        "name":      "Dimethyl fumarate",
+        "smiles":    "COC(=O)/C=C/C(=O)OC",
+        "category":  "Multiple sclerosis",
+        "indication":"Relapsing-remitting MS",
+        "moa":       "Nrf2 pathway activator — anti-inflammatory, neuroprotective",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+    {
+        "name":      "Siponimod",
+        "smiles":    "CC(C)(C)c1ccc(C[C@@H](NC(=O)c2cccc(C3CC3)c2)c2ccc(cc2)-c2cc(C(F)(F)F)nn2-c2ccccc2)cc1",
+        "category":  "Multiple sclerosis",
+        "indication":"Secondary progressive MS",
+        "moa":       "S1P1/S1P5 receptor modulator — sequesters lymphocytes in lymph nodes",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
+    # ── Narcolepsy / Wakefulness disorders ───────────────────────────────────
+    {
+        "name":      "Sodium oxybate",
+        "smiles":    "OCC(=O)O",
+        "category":  "Narcolepsy",
+        "indication":"Narcolepsy with cataplexy",
+        "moa":       "GABAB agonist / GHB receptor agonist",
+        "bbb_mechanism": "MCT1-mediated active transport",
+    },
+    {
+        "name":      "Pitolisant",
+        "smiles":    "O(CCCc1ccc(Cl)cc1)CCCCN1CCC(CC1)n1cnc2ccccc21",
+        "category":  "Narcolepsy",
+        "indication":"Narcolepsy",
+        "moa":       "Histamine H3 receptor inverse agonist/antagonist",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
+    # ── Vertigo / Vestibular ──────────────────────────────────────────────────
+    {
+        "name":      "Betahistine",
+        "smiles":    "CNNCc1ccncc1",
+        "category":  "Vestibular",
+        "indication":"Ménière's disease, vertigo",
+        "moa":       "H1 agonist / H3 antagonist — improves labyrinthine blood flow",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
+    # ── Neuroprotection / Cerebrovascular ────────────────────────────────────
+    {
+        "name":      "Nimodipine",
+        "smiles":    "CCOC(=O)C1=C(C)NC(=C(C1c1ccc([N+](=O)[O-])cc1)C(=O)OC(C)C)C",
+        "category":  "Cerebrovascular",
+        "indication":"Subarachnoid haemorrhage — prevents vasospasm",
+        "moa":       "L-type Ca²⁺ channel blocker (CNS-selective)",
+        "bbb_mechanism": "Passive transcellular diffusion (high lipophilicity)",
+    },
+    {
+        "name":      "Vinpocetine",
+        "smiles":    "CCOC(=O)[C@@H]1CC(=CCN2CCC3c4ccccc4N(C3=O)[C@H]12)C",
+        "category":  "Cerebrovascular",
+        "indication":"Cognitive impairment, cerebrovascular disorders",
+        "moa":       "PDE1 inhibitor; Na⁺ channel blocker; cerebral vasodilator",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
+    # ── Nausea / CNS antiemetics ──────────────────────────────────────────────
+    {
+        "name":      "Ondansetron",
+        "smiles":    "Cc1ccc2[nH]c(=O)n(CC3CCN(C)CC3)c2c1",
+        "category":  "Antiemetic",
+        "indication":"Chemotherapy-induced nausea, post-operative nausea",
+        "moa":       "5-HT3 receptor antagonist",
+        "bbb_mechanism": "Passive transcellular diffusion (limited CNS penetration)",
+    },
+    {
+        "name":      "Metoclopramide",
+        "smiles":    "CCN(CC)CCNC(=O)c1cc(Cl)c(N)cc1OC",
+        "category":  "Antiemetic",
+        "indication":"Nausea, gastroparesis",
+        "moa":       "D2 antagonist / 5-HT4 agonist",
+        "bbb_mechanism": "Passive transcellular diffusion",
+    },
+
     # ── Peripherally-acting controls (intentionally poor CNS) ────────────────
     {
         "name":      "Atenolol",
