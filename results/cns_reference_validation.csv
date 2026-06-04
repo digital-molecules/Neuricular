@@ -1,0 +1,11 @@
+Drug,Known BBB,Predicted BBB,Probability,Confidence
+Donepezil,True,True,0.84,high
+Sertraline,True,True,0.9933,high
+Clozapine,True,True,0.9067,high
+Levodopa,True,False,0.3598,moderate
+Memantine,True,True,0.9533,high
+Valproic acid,True,True,0.9625,high
+Caffeine,True,True,0.9733,high
+Atenolol,False,False,0.3267,moderate
+Morphine,True,True,1.0,high
+Gabapentin,True,True,0.9333,high
