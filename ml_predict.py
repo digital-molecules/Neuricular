@@ -275,17 +275,26 @@ CNS_REFERENCE_DRUGS = [
         ),
     },
     {
-        "name":                  "Morphine",
+        "name":                  "Morphine", "category": "Opioid Analgesic",
         "smiles":                "CN1CC[C@]23c4c5ccc(O)c4O[C@H]2[C@@H](O)C=C[C@@H]3[C@@H]1C5",
         "indication":            "Opioid analgesic — MOR agonist",
         "known_bbb_permeable":   True,
         "bbb_mechanism":         "Partial passive diffusion; P-gp substrate limits CNS exposure",
-        "expected_model_agrees": None,   # genuinely ambiguous
+        "expected_model_agrees": True,
         "discussion_point": (
-            "Ambiguous case: morphine does reach the CNS but P-glycoprotein efflux "
-            "limits its exposure relative to more lipophilic opioids. Binary BBB labels "
-            "do not capture this nuance — illustrating a limitation of the training data "
-            "itself, not just the model."
+            "OVERCONFIDENCE CASE (P = 1.0, high confidence): The model predicts morphine "
+            "as BBB-permeable with maximum probability — the highest in this entire panel. "
+            "This is technically correct, but the certainty is misleading. In reality, "
+            "morphine is a P-glycoprotein (P-gp) efflux substrate, meaning a significant "
+            "fraction of molecules that cross the BBB are actively pumped back out, "
+            "substantially limiting free CNS exposure relative to more lipophilic opioids "
+            "like fentanyl or oxycodone. The BBBP dataset uses a binary permeable/not-permeable "
+            "label that cannot encode this nuance — morphine is labelled permeable, the model "
+            "learned that confidently, and likely reinforced it by seeing structurally related "
+            "opioid scaffolds throughout the training set. A probability of 1.0 does not mean "
+            "the model understands the pharmacology; it means the morphine scaffold is "
+            "overrepresented or highly consistent in the training data. This is a case where "
+            "model confidence and pharmacological reality diverge in a clinically relevant way."
         ),
     },
     {
