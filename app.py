@@ -38,7 +38,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-st.caption("By Efthalia Arvanitidou.")
 
 # ── Dark theme CSS ────────────────────────────────────────────────────────────
 st.markdown("""
@@ -157,7 +156,7 @@ def _load_models():
 
 bbbp_model, clintox_model, model_errors = _load_models()
 
-
+st.caption("By Efthalia Arvanitidou.")
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _label(text: str) -> str:
