@@ -1193,7 +1193,7 @@ with tab3:
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div style="margin-top:3rem; padding-top:1.2rem; border-top:1px solid #1e2330;
-            font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#3f475c;
+            font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#5d6987;
             display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
     <span>By Efthalia Arvanitidou</span>
 </div>
