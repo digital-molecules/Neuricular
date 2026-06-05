@@ -1196,7 +1196,6 @@ st.markdown("""
 <div style="margin-top:3rem; padding-top:1.2rem; border-top:1px solid #1e2330;
             font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#2a3040;
             display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-    <span>Neuricular · CNS Drug Candidate Screening Pipeline</span>
-    <span>RDKit · scikit-learn · BBBP + ClinTox (MoleculeNet) · CNS MPO: Wager et al. 2010</span>
+    <span>By Efthalia Arvanitidou</span>
 </div>
 """, unsafe_allow_html=True)
