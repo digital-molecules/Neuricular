@@ -1,5 +1,5 @@
 """
-schemas.py — MetricularPro
+schemas.py — Neuricular's data schemas for chemistry results and ML pipeline artefacts
 ===========================
 All dataclasses and structured result types used across the pipeline.
 

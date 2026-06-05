@@ -1,5 +1,5 @@
 """
-ml_model.py — MetricularPro
+ml_model.py — Neuricular's machine learning model training module
 ============================
 Train and persist Random Forest classifiers for BBBP and ClinTox datasets.
 
@@ -19,18 +19,19 @@ import sys
 import urllib.request
 import gzip
 import io
+import contextlib
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     roc_auc_score, confusion_matrix, roc_curve,
     precision_score, recall_score, f1_score,
 )
-from sklearn.calibration import CalibratedClassifierCV 
 from rdkit import Chem
-from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import rdFingerprintGenerator
 
 from exceptions import (
     DatasetLoadError, InsufficientDataError, ModelTrainingError,
@@ -44,7 +45,7 @@ logging.basicConfig(
     format="%(asctime)s  %(levelname)-8s  %(name)s — %(message)s",
     datefmt="%H:%M:%S",
 )
-logger = logging.getLogger("metricularpro.training")
+logger = logging.getLogger("neuricular.training")
 
 # ── Fingerprint / RF hyperparameters ──────────────────────────────────────────
 FP_RADIUS       = 2
@@ -52,6 +53,13 @@ FP_NBITS        = 2048
 RF_N_ESTIMATORS = 150
 RF_RANDOM_STATE = 42
 TEST_SIZE       = 0.20
+
+# Number of physicochemical descriptor features appended after the fingerprint.
+# Must stay in sync with _build_features() below.
+N_DESC_FEATURES = 8
+
+# Module-level Morgan generator — replaces deprecated GetMorganFingerprintAsBitVect.
+_MORGAN_GEN = rdFingerprintGenerator.GetMorganGenerator(radius=FP_RADIUS, fpSize=FP_NBITS)
 
 # ── Dataset configuration ─────────────────────────────────────────────────────
 DATASETS = {
@@ -84,6 +92,62 @@ DATASETS = {
 }
 
 _UA = "Mozilla/5.0 (compatible; MetricularPro/1.0)"
+
+
+# ── Feature construction ──────────────────────────────────────────────────────
+
+def _smiles_to_fp(smiles: str) -> list | None:
+    """
+    Convert SMILES to Morgan fingerprint bit vector (list of ints 0/1).
+    Returns None for unparseable SMILES.
+    Redirects RDKit stderr to suppress kekulization noise.
+    """
+    try:
+        with open(os.devnull, "w") as devnull, contextlib.redirect_stderr(devnull):
+            mol = Chem.MolFromSmiles(str(smiles).strip())
+        if mol is None:
+            raise ValueError("RDKit returned None")
+        return list(_MORGAN_GEN.GetFingerprint(mol))
+    except Exception as exc:
+        logger.debug("Skipping invalid SMILES '%s': %s", smiles, exc)
+        return None
+
+
+def _build_features(smiles: str) -> list | None:
+    """
+    Combined feature vector: Morgan fingerprint (2048 bits) + 8 physicochemical
+    descriptors appended as float values.
+
+    float32 array avoids uint8 overflow for descriptor values like MW/TPSA.
+    All RDKit stderr (valence warnings, hydrogen warnings, kekulization errors)
+    is suppressed here — errors are already handled by the None-return path.
+
+    Descriptor order (must match N_DESC_FEATURES and _build_inference_features):
+        MW, logP, logD, TPSA, HBD, HBA, RotBonds, QED
+    """
+    try:
+        with open(os.devnull, "w") as devnull, contextlib.redirect_stderr(devnull):
+            mol = Chem.MolFromSmiles(str(smiles).strip())
+            if mol is None:
+                raise ValueError("RDKit returned None")
+            fp   = list(_MORGAN_GEN.GetFingerprint(mol))
+            desc = get_descriptor_profile(smiles)
+    except Exception as exc:
+        logger.debug("Skipping '%s': %s", smiles, exc)
+        return None
+
+    desc_vec = [
+        desc.mw,
+        desc.logp,
+        desc.logd,
+        desc.tpsa,
+        float(desc.hbd),
+        float(desc.hba),
+        float(desc.rotbond),
+        desc.qed,
+    ]
+
+    return fp + desc_vec
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -123,23 +187,9 @@ def _fetch_dataframe(config: dict, name: str) -> pd.DataFrame:
     )
 
 
-def _smiles_to_fp(smiles: str) -> list | None:
-    """Convert SMILES to Morgan fingerprint. Returns None (logs warning) on failure."""
-    try:
-        mol = Chem.MolFromSmiles(str(smiles).strip())
-        if mol is None:
-            raise ValueError("RDKit returned None")
-        return list(rdMolDescriptors.GetMorganFingerprintAsBitVect(
-            mol, FP_RADIUS, nBits=FP_NBITS
-        ))
-    except Exception as exc:
-        logger.debug("Skipping invalid SMILES '%s': %s", smiles, exc)
-        return None
-
-
 def _load_dataset(config: dict, name: str):
     """
-    Fetch, validate, and fingerprint a dataset.
+    Fetch, validate, and featurise a dataset.
     Returns (X_train, X_test, y_train, y_test, DatasetStats).
 
     Raises: DatasetLoadError, InsufficientDataError
@@ -176,10 +226,8 @@ def _load_dataset(config: dict, name: str):
     df = df[valid_labels]
 
     fps, labels, n_skipped = [], [], 0
-
     for _, row in df.iterrows():
         feat = _build_features(row["smiles"])
-
         if feat is not None:
             fps.append(feat)
             labels.append(row["label"])
@@ -197,7 +245,9 @@ def _load_dataset(config: dict, name: str):
             "Dataset source may have changed."
         )
 
-    X = np.array(fps, dtype=np.uint8)
+    # float32: handles both binary fingerprint bits (0/1) and continuous
+    # descriptor values (MW, TPSA etc.) without uint8 overflow.
+    X = np.array(fps, dtype=np.float32)
     y = np.array(labels, dtype=np.int32)
 
     class_counts = dict(zip(*np.unique(y, return_counts=True)))
@@ -230,28 +280,42 @@ def _load_dataset(config: dict, name: str):
 def _train_and_evaluate(X_train, X_test, y_train, y_test,
                         config: dict, stats: DatasetStats) -> ModelArtefact:
     """
-    Fit RandomForest and compute full evaluation metrics on the held-out test set.
-    Returns a ModelArtefact (schemas.py).
+    Fit a calibrated RandomForest and evaluate on the held-out test set.
+
+    CalibratedClassifierCV with isotonic regression corrects the probability
+    overconfidence typical of Random Forests (e.g. morphine P=1.0), producing
+    more reliable confidence scores. The base RF is accessible via
+    clf.estimator for feature importances.
 
     Raises: ModelTrainingError
     """
-    name = stats.name
-    logger.info("[%s] Fitting RandomForest (n_estimators=%d) …", name, RF_N_ESTIMATORS)
+    name  = stats.name
+    n_pos = stats.class_balance.get(1, 0)
+
+    # Calibration strategy:
+    # - Well-balanced datasets (BBBP, n_pos=1560): isotonic calibration corrects
+    #   RF overconfidence (e.g. morphine P=1.0 → more realistic probability).
+    # - Severely imbalanced datasets (ClinTox, n_pos=112, ratio 12:1): both
+    #   isotonic and sigmoid calibration collapse all positive predictions to zero
+    #   because calibration overrides class_weight='balanced'. Skip calibration
+    #   entirely and use raw RF probabilities, which already give AUC ~0.77.
+    use_calibration = n_pos >= 300
+    logger.info(
+        "[%s] Calibration: %s (n_pos=%d)",
+        name, "isotonic" if use_calibration else "disabled (insufficient positives)", n_pos
+    )
+
     try:
-
         rf = RandomForestClassifier(
-        n_estimators=RF_N_ESTIMATORS,
-        random_state=RF_RANDOM_STATE,
-        n_jobs=-1,
-        class_weight="balanced",
+            n_estimators=RF_N_ESTIMATORS,
+            random_state=RF_RANDOM_STATE,
+            n_jobs=-1,
+            class_weight="balanced",
         )
-
-        clf = CalibratedClassifierCV(
-        estimator=rf,
-        method="isotonic",
-        cv=5
-        )
-
+        if use_calibration:
+            clf = CalibratedClassifierCV(estimator=rf, method="isotonic", cv=5)
+        else:
+            clf = rf
         clf.fit(X_train, y_train)
     except Exception as exc:
         raise ModelTrainingError(f"Fit failed for '{name}': {exc}") from exc
@@ -260,7 +324,7 @@ def _train_and_evaluate(X_train, X_test, y_train, y_test,
     y_pred = clf.predict(X_test)
 
     try:
-        auc      = roc_auc_score(y_test, y_prob)
+        auc         = roc_auc_score(y_test, y_prob)
         fpr, tpr, _ = roc_curve(y_test, y_prob, pos_label=config["label_pos"])
     except ValueError as exc:
         raise ModelTrainingError(
@@ -274,12 +338,25 @@ def _train_and_evaluate(X_train, X_test, y_train, y_test,
 
     logger.info("[%s] AUC=%.3f  P=%.3f  R=%.3f  F1=%.3f", name, auc, precision, recall, f1)
 
+    # Extract feature importances — path differs between calibrated and raw RF.
+    try:
+        if use_calibration:
+            importances = np.mean(
+                [e.estimator.feature_importances_ for e in clf.calibrated_classifiers_],
+                axis=0,
+            )
+        else:
+            importances = clf.feature_importances_
+    except AttributeError:
+        logger.warning("[%s] Could not extract feature importances.", name)
+        importances = np.zeros(X_train.shape[1])
+
     return ModelArtefact(
         dataset_name=name, dataset_description=config["description"],
         model=clf, stats=stats,
         auc=auc, precision=precision, recall=recall, f1=f1,
         fpr=fpr, tpr=tpr, cm=cm,
-        feature_importances=clf.feature_importances_,
+        feature_importances=importances,
         fp_radius=FP_RADIUS, fp_nbits=FP_NBITS, rf_n_estimators=RF_N_ESTIMATORS,
     )
 
@@ -322,32 +399,6 @@ def train_all() -> None:
         sys.exit(1)
     logger.info("All models trained successfully.")
 
-def _build_features(smiles: str):
-    """
-    Combined feature vector:
-    - Morgan fingerprint (2048)
-    - Physicochemical descriptors (6 values)
-    """
-
-    fp = _smiles_to_fp(smiles)
-    if fp is None:
-        return None
-
-    desc = get_descriptor_profile(smiles)
-
-    # Numeric descriptors (important for BBB + transporter edge cases)
-    desc_vec = [
-        desc.mw,
-        desc.logp,
-        desc.logd,
-        desc.tpsa,
-        desc.hbd,
-        desc.hba,
-        desc.rotbond,
-        desc.qed,
-    ]
-
-    return fp + desc_vec
 
 if __name__ == "__main__":
     train_all()

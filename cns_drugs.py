@@ -1,5 +1,7 @@
 """
-Curated reference database of CNS drugs for automated Tanimoto similarity analysis for Neuricular.
+cns_drugs.py — Neuricular's curated reference database of CNS drugs for Tanimoto similarity analysis
+=============================
+Curated reference database of CNS drugs for automated Tanimoto similarity analysis.
 
 Organised by therapeutic category. Each entry includes:
   - name, smiles, category, indication, bbb_mechanism
@@ -9,8 +11,7 @@ Used by chem_calc.get_cns_tanimoto_panel() to identify which known CNS drugs
 a query molecule most structurally resembles, providing pharmacological context
 for the similarity results.
 
-SMILES sourced from PubChem canonical SMILES and cross-checked against
-DrugBank where available.
+SMILES sourced from PubChem canonical SMILES.
 """
 
 CNS_DRUG_DATABASE = [
@@ -18,7 +19,7 @@ CNS_DRUG_DATABASE = [
     # ── Antidepressants ───────────────────────────────────────────────────────
     {
         "name":      "Sertraline",
-        "smiles":    "CNC1CCC(c2ccc(Cl)c(Cl)c2)c2ccccc21",
+        "smiles":    "CN[C@H]1CC[C@H](C2=CC=CC=C12)C3=CC(=C(C=C3)Cl)Cl",
         "category":  "Antidepressant",
         "indication":"Major depressive disorder, OCD, PTSD",
         "moa":       "Selective serotonin reuptake inhibitor (SSRI)",
@@ -26,7 +27,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Fluoxetine",
-        "smiles":    "CNCCC(Oc1ccc(cc1)C(F)(F)F)c1ccccc1",
+        "smiles":    "CNCCC(C1=CC=CC=C1)OC2=CC=C(C=C2)C(F)(F)F",
         "category":  "Antidepressant",
         "indication":"Depression, bulimia, OCD",
         "moa":       "SSRI",
@@ -34,7 +35,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Paroxetine",
-        "smiles":    "O=C1OCC[C@@H]1Cc1ccc(F)cc1",
+        "smiles":    "C1CNC[C@H]([C@@H]1C2=CC=C(C=C2)F)COC3=CC4=C(C=C3)OCO4",
         "category":  "Antidepressant",
         "indication":"Depression, panic disorder, social anxiety",
         "moa":       "SSRI",
@@ -42,7 +43,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Escitalopram",
-        "smiles":    "CNCCC(c1ccc(F)cc1)c1ccc2c(c1)CC(=O)O2",
+        "smiles":    "CN(C)CCC[C@@]1(C2=C(CO1)C=C(C=C2)C#N)C3=CC=C(C=C3)F",
         "category":  "Antidepressant",
         "indication":"Depression, generalised anxiety disorder",
         "moa":       "SSRI",
@@ -50,7 +51,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Venlafaxine",
-        "smiles":    "COc1ccc(C(CN(C)C)C2(O)CCCCC2)cc1",
+        "smiles":    "CN(C)CC(C1=CC=C(C=C1)OC)C2(CCCCC2)O",
         "category":  "Antidepressant",
         "indication":"Depression, anxiety, fibromyalgia",
         "moa":       "Serotonin-norepinephrine reuptake inhibitor (SNRI)",
@@ -58,7 +59,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Duloxetine",
-        "smiles":    "CNCCc1ccc2cccc(OC(c3ccccc3)c3cccs3)c2c1",
+        "smiles":    "CNCC[C@@H](C1=CC=CS1)OC2=CC=CC3=CC=CC=C32",
         "category":  "Antidepressant",
         "indication":"Depression, neuropathic pain, fibromyalgia",
         "moa":       "SNRI",
@@ -66,7 +67,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Amitriptyline",
-        "smiles":    "CN(C)CCC=C1c2ccccc2CCc2ccccc21",
+        "smiles":    "CN(C)CCC=C1C2=CC=CC=C2CCC3=CC=CC=C31",
         "category":  "Antidepressant",
         "indication":"Depression, neuropathic pain, migraine prophylaxis",
         "moa":       "Tricyclic antidepressant — NE/5-HT reuptake inhibitor + anticholinergic",
@@ -74,7 +75,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Imipramine",
-        "smiles":    "CN(C)CCCN1c2ccccc2CCc2ccccc21",
+        "smiles":    "CN(C)CCCN1C2=CC=CC=C2CCC3=CC=CC=C31",
         "category":  "Antidepressant",
         "indication":"Depression, enuresis, panic disorder",
         "moa":       "Tricyclic antidepressant (TCA)",
@@ -82,7 +83,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Mirtazapine",
-        "smiles":    "CN1CCN(C2=Nc3ccccc3Cc3cccnc32)CC1",
+        "smiles":    "CN1CCN2C(C1)C3=CC=CC=C3CC4=C2N=CC=C4",
         "category":  "Antidepressant",
         "indication":"Depression, insomnia, appetite stimulation",
         "moa":       "NaSSA — α2-adrenergic antagonist, 5-HT2/3 antagonist",
@@ -90,7 +91,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Bupropion",
-        "smiles":    "CC(C)(N)C(=O)c1cccc(Cl)c1",
+        "smiles":    "CC(C(=O)C1=CC(=CC=C1)Cl)NC(C)(C)C",
         "category":  "Antidepressant",
         "indication":"Depression, smoking cessation",
         "moa":       "NE/DA reuptake inhibitor (NDRI)",
@@ -100,7 +101,7 @@ CNS_DRUG_DATABASE = [
     # ── Antipsychotics ────────────────────────────────────────────────────────
     {
         "name":      "Clozapine",
-        "smiles":    "CN1CCN(c2nc3ccccc3nc2Cl)CC1",
+        "smiles":    "CN1CCN(CC1)C2=NC3=C(C=CC(=C3)Cl)NC4=CC=CC=C42",
         "category":  "Antipsychotic",
         "indication":"Treatment-resistant schizophrenia",
         "moa":       "Atypical antipsychotic — D4/5-HT2A antagonist",
@@ -108,7 +109,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Risperidone",
-        "smiles":    "Cc1ncc2n1-c1ccc(F)cc1CC2=O",
+        "smiles":    "CC1=C(C(=O)N2CCCCC2=N1)CCN3CCC(CC3)C4=NOC5=C4C=CC(=C5)F",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder",
         "moa":       "Atypical antipsychotic — D2/5-HT2A antagonist",
@@ -116,7 +117,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Olanzapine",
-        "smiles":    "Cc1ccc2c(c1)Sc1ccccc1N2CCCN1CCN(C)CC1",
+        "smiles":    "CC1=CC2=C(S1)NC3=CC=CC=C3N=C2N4CCN(CC4)C",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder",
         "moa":       "Atypical antipsychotic — multiple receptor antagonism",
@@ -124,7 +125,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Quetiapine",
-        "smiles":    "O=C(NCCO)c1ccc2nc3ccccc3sc2c1",
+        "smiles":    "C1CN(CCN1CCOCCO)C2=NC3=CC=CC=C3SC4=CC=CC=C42",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder, depression (adjunct)",
         "moa":       "Atypical antipsychotic — D2/5-HT2 antagonist",
@@ -132,7 +133,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Haloperidol",
-        "smiles":    "OC(CCN1CCC(=O)c2ccc(Cl)cc21)c1ccc(F)cc1",
+        "smiles":    "C1CN(CCC1(C2=CC=C(C=C2)Cl)O)CCCC(=O)C3=CC=C(C=C3)F",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, Tourette syndrome, acute agitation",
         "moa":       "Typical antipsychotic — D2 antagonist",
@@ -140,7 +141,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Aripiprazole",
-        "smiles":    "O=C1CCc2c(N1)cc(cc2)OCCCCN1CCN(CC1)c1cccc(c1Cl)Cl",
+        "smiles":    "C1CC(=O)NC2=C1C=CC(=C2)OCCCCN3CCN(CC3)C4=C(C(=CC=C4)Cl)Cl",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder, MDD adjunct",
         "moa":       "Partial D2/D3 agonist, 5-HT2A antagonist",
@@ -148,7 +149,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Ziprasidone",
-        "smiles":    "Clc1ccc2[nH]c(CCN3CCN(c4nsc5ccccc45)CC3)cc2c1",
+        "smiles":    "C1CN(CCN1CCC2=C(C=C3C(=C2)CC(=O)N3)Cl)C4=NSC5=CC=CC=C54",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar mania",
         "moa":       "D2/5-HT2A antagonist",
@@ -158,7 +159,7 @@ CNS_DRUG_DATABASE = [
     # ── Anxiolytics / Sedatives ───────────────────────────────────────────────
     {
         "name":      "Diazepam",
-        "smiles":    "CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21",
+        "smiles":    "CN1C(=O)CN=C(C2=C1C=CC(=C2)Cl)C3=CC=CC=C3",
         "category":  "Anxiolytic",
         "indication":"Anxiety, muscle spasm, alcohol withdrawal, seizures",
         "moa":       "Benzodiazepine — GABAA positive allosteric modulator",
@@ -166,7 +167,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Alprazolam",
-        "smiles":    "Cc1nnc2n1-c1ccc(Cl)cc1C(=NCC2)c1ccccc1",
+        "smiles":    "CC1=NN=C2N1C3=C(C=C(C=C3)Cl)C(=NC2)C4=CC=CC=C4",
         "category":  "Anxiolytic",
         "indication":"Panic disorder, anxiety",
         "moa":       "Benzodiazepine — GABAA PAM",
@@ -174,7 +175,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Lorazepam",
-        "smiles":    "OC1CN=C(c2ccccc2Cl)c2cc(Cl)ccc2N1=O",
+        "smiles":    "C1=CC=C(C(=C1)C2=NC(C(=O)NC3=C2C=C(C=C3)Cl)O)Cl",
         "category":  "Anxiolytic",
         "indication":"Anxiety, status epilepticus, procedural sedation",
         "moa":       "Benzodiazepine — GABAA PAM",
@@ -182,7 +183,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Buspirone",
-        "smiles":    "O=C1CCCN1CCCN1CCN(c2nc3ccccc3[nH]2)CC1",
+        "smiles":    "C1CCC2(C1)CC(=O)N(C(=O)C2)CCCCN3CCN(CC3)C4=NC=CC=N4",
         "category":  "Anxiolytic",
         "indication":"Generalised anxiety disorder",
         "moa":       "5-HT1A partial agonist",
@@ -190,7 +191,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Zolpidem",
-        "smiles":    "CN(C)C(=O)Cc1nc2ccc(C)cc2c1-c1ccc(C)cc1",
+        "smiles":    "CC1=CC=C(C=C1)C2=C(N3C=C(C=CC3=N2)C)CC(=O)N(C)C",
         "category":  "Hypnotic",
         "indication":"Insomnia",
         "moa":       "GABAA PAM — BZ1-selective",
@@ -198,7 +199,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Zaleplon",
-        "smiles":    "CCN(CC)c1cccc(C(=O)c2ccnc3[nH]nc(-c4ccccc4)c23)c1",
+        "smiles":    "CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C",
         "category":  "Hypnotic",
         "indication":"Insomnia",
         "moa":       "GABAA PAM — BZ1-selective",
@@ -206,7 +207,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Melatonin",
-        "smiles":    "COc1ccc2[nH]cc(CCNC(C)=O)c2c1",
+        "smiles":    "CC(=O)NCCC1=CNC2=C1C=C(C=C2)OC",
         "category":  "Hypnotic",
         "indication":"Sleep disorders, jet lag",
         "moa":       "MT1/MT2 melatonin receptor agonist",
@@ -224,23 +225,15 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Carbamazepine",
-        "smiles":    "NC(=O)N1c2ccccc2C=Cc2ccccc21",
+        "smiles":    "C1=CC=C2C(=C1)C=CC3=CC=CC=C3N2C(=O)N",
         "category":  "Antiepileptic",
         "indication":"Epilepsy, trigeminal neuralgia, bipolar disorder",
         "moa":       "Voltage-gated Na⁺ channel blocker",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
-        "name":      "Lamotrigine",
-        "smiles":    "Nc1nc2cc(Cl)c(Cl)cc2c(=O)[nH]1",
-        "category":  "Antiepileptic",
-        "indication":"Epilepsy, bipolar disorder",
-        "moa":       "Na⁺ channel blocker, glutamate release inhibitor",
-        "bbb_mechanism": "Passive transcellular diffusion",
-    },
-    {
         "name":      "Levetiracetam",
-        "smiles":    "CC[C@@H](CC(N)=O)N1CCCC1=O",
+        "smiles":    "CC[C@@H](C(=O)N)N1CCCC1=O",
         "category":  "Antiepileptic",
         "indication":"Focal and generalised epilepsy",
         "moa":       "SV2A synaptic vesicle protein modulator",
@@ -248,7 +241,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Gabapentin",
-        "smiles":    "NCC1(CC(=O)O)CCCCC1",
+        "smiles":    "C1CCC(CC1)(CC(=O)O)CN",
         "category":  "Antiepileptic",
         "indication":"Epilepsy, neuropathic pain",
         "moa":       "α2δ voltage-gated Ca²⁺ channel subunit modulator",
@@ -256,7 +249,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Pregabalin",
-        "smiles":    "CC(CN)CC(=O)O",
+        "smiles":    "CC(C)C[C@@H](CC(=O)O)CN",
         "category":  "Antiepileptic",
         "indication":"Neuropathic pain, epilepsy, fibromyalgia, anxiety",
         "moa":       "α2δ voltage-gated Ca²⁺ channel subunit modulator",
@@ -264,23 +257,15 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Phenytoin",
-        "smiles":    "O=C1NC(=O)C(c2ccccc2)(c2ccccc2)N1",
+        "smiles":    "C1=CC=C(C=C1)C2(C(=O)NC(=O)N2)C3=CC=CC=C3",
         "category":  "Antiepileptic",
         "indication":"Epilepsy, arrhythmia",
         "moa":       "Voltage-gated Na⁺ channel blocker",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
-        "name":      "Topiramate",
-        "smiles":    "CC1(C)OC2COC3(COS(N)(=O)=O)OC1C2O3",
-        "category":  "Antiepileptic",
-        "indication":"Epilepsy, migraine prophylaxis, weight management",
-        "moa":       "Na⁺ channel blocker, AMPA/kainate antagonist, GABA enhancer",
-        "bbb_mechanism": "Passive transcellular diffusion",
-    },
-    {
         "name":      "Zonisamide",
-        "smiles":    "NS(=O)(=O)Cc1cnoc1-c1ccccc1",
+        "smiles":    "C1=CC=C2C(=C1)C(=NO2)CS(=O)(=O)N",
         "category":  "Antiepileptic",
         "indication":"Epilepsy, Parkinson's disease",
         "moa":       "Na⁺/T-type Ca²⁺ channel blocker",
@@ -290,7 +275,7 @@ CNS_DRUG_DATABASE = [
     # ── Parkinson's / Movement Disorders ─────────────────────────────────────
     {
         "name":      "Levodopa",
-        "smiles":    "N[C@@H](Cc1ccc(O)c(O)c1)C(=O)O",
+        "smiles":    "C1=CC(=C(C=C1C[C@@H](C(=O)O)N)O)O",
         "category":  "Parkinson's",
         "indication":"Parkinson's disease",
         "moa":       "Dopamine precursor",
@@ -298,7 +283,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Pramipexole",
-        "smiles":    "CCCNc1nc2c(s1)CCCN2",
+        "smiles":    "CCCN[C@H]1CCC2=C(C1)SC(=N2)N",
         "category":  "Parkinson's",
         "indication":"Parkinson's disease, restless legs syndrome",
         "moa":       "D2/D3 dopamine receptor agonist",
@@ -306,7 +291,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Ropinirole",
-        "smiles":    "CCCn1cc2c(c1=O)CC(CCC(=O)c1ccc(O)cc1)N2",
+        "smiles":    "CCCN(CCC)CCC1=C2CC(=O)NC2=CC=C1",
         "category":  "Parkinson's",
         "indication":"Parkinson's disease, restless legs syndrome",
         "moa":       "D2/D3 dopamine receptor agonist",
@@ -314,7 +299,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Selegiline",
-        "smiles":    "C#CCN(C)[C@H](C)Cc1ccccc1",
+        "smiles":    "C[C@H](CC1=CC=CC=C1)N(C)CC#C",
         "category":  "Parkinson's",
         "indication":"Parkinson's disease",
         "moa":       "Irreversible MAO-B inhibitor",
@@ -322,7 +307,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Entacapone",
-        "smiles":    "CCN(CC)/C(=O)/C=C(/C#N)c1cc(O)c(O)c([N+](=O)[O-])c1",
+        "smiles":    "CCN(CC)C(=O)/C(=C/C1=CC(=C(C(=C1)O)O)[N+](=O)[O-])/C#N",
         "category":  "Parkinson's",
         "indication":"Parkinson's disease (adjunct to levodopa)",
         "moa":       "Peripheral COMT inhibitor",
@@ -332,7 +317,7 @@ CNS_DRUG_DATABASE = [
     # ── Alzheimer's / Dementia ────────────────────────────────────────────────
     {
         "name":      "Donepezil",
-        "smiles":    "COc1cc2c(cc1OC)CC(CC(=O)c1ccccc1)C2",
+        "smiles":    "CCN(CC)C(=O)/C(=C/C1=CC(=C(C(=C1)O)O)[N+](=O)[O-])/C#N",
         "category":  "Alzheimer's",
         "indication":"Alzheimer's disease",
         "moa":       "Acetylcholinesterase (AChE) inhibitor",
@@ -340,7 +325,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Memantine",
-        "smiles":    "CC12CC(CC(C1)(CN)C)(C2)N",
+        "smiles":    "CC12CC3CC(C1)(CC(C3)(C2)N)C",
         "category":  "Alzheimer's",
         "indication":"Moderate–severe Alzheimer's disease",
         "moa":       "NMDA receptor antagonist",
@@ -348,7 +333,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Rivastigmine",
-        "smiles":    "CCN(C)C(=O)Oc1ccc([C@@H](C)N(C)CC)cc1",
+        "smiles":    "CCN(C)C(=O)OC1=CC=CC(=C1)[C@H](C)N(C)C",
         "category":  "Alzheimer's",
         "indication":"Alzheimer's disease, Parkinson's dementia",
         "moa":       "Pseudo-irreversible AChE/BuChE inhibitor",
@@ -356,7 +341,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Galantamine",
-        "smiles":    "COc1ccc2c(c1)C[C@H]1[C@@H](O)C=C[C@]3([C@@H]1[N@@](CC2)CC3)O",
+        "smiles":    "CN1CC[C@@]23C=C[C@@H](C[C@@H]2OC4=C(C=CC(=C34)C1)OC)O",
         "category":  "Alzheimer's",
         "indication":"Mild–moderate Alzheimer's disease",
         "moa":       "AChE inhibitor + nicotinic receptor PAM",
@@ -366,7 +351,7 @@ CNS_DRUG_DATABASE = [
     # ── Opioid Analgesics ─────────────────────────────────────────────────────
     {
         "name":      "Morphine",
-        "smiles":    "CN1CC[C@]23c4c5ccc(O)c4O[C@H]2[C@@H](O)C=C[C@@H]3[C@@H]1C5",
+        "smiles":    "CN1CC[C@]23[C@@H]4[C@H]1CC5=C2C(=C(C=C5)O)O[C@H]3[C@H](C=C4)O",
         "category":  "Opioid analgesic",
         "indication":"Severe pain",
         "moa":       "μ-opioid receptor agonist",
@@ -374,7 +359,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Oxycodone",
-        "smiles":    "COc1ccc2c(c1)C[C@H]1[C@@H](O)C=C[C@@]3([C@@H]1[N@@](CC23)C)O",
+        "smiles":    "CN1CC[C@]23[C@@H]4C(=O)CC[C@]2([C@H]1CC5=C3C(=C(C=C5)OC)O4)O",
         "category":  "Opioid analgesic",
         "indication":"Moderate–severe pain",
         "moa":       "μ-opioid receptor agonist",
@@ -382,7 +367,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Tramadol",
-        "smiles":    "OC1(c2ccccc2)CCCC[C@@H]1CN(C)C",
+        "smiles":    "CN(C)C[C@H]1CCCC[C@@]1(C2=CC(=CC=C2)OC)O",
         "category":  "Opioid analgesic",
         "indication":"Moderate–severe pain",
         "moa":       "Weak μ-opioid agonist + SNRI",
@@ -390,7 +375,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Fentanyl",
-        "smiles":    "CCC(=O)N(c1ccccc1)C1CCN(CCc2ccccc2)CC1",
+        "smiles":    "CCC(=O)N(C1CCN(CC1)CCC2=CC=CC=C2)C3=CC=CC=C3",
         "category":  "Opioid analgesic",
         "indication":"Severe pain, anaesthesia",
         "moa":       "μ-opioid receptor agonist",
@@ -398,7 +383,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Buprenorphine",
-        "smiles":    "CO[C@]12CC[C@@]3(C[C@@H]1[C@](C)(O)C(C)(C)C)[C@@H]1Cc4ccc(O)c5c4[C@@]3(CCN1CC1CC1)[C@@H]2O5",
+        "smiles":    "C[C@]([C@H]1C[C@@]23CC[C@@]1([C@H]4[C@@]25CCN([C@@H]3CC6=C5C(=C(C=C6)O)O4)CC7CC7)OC)(C(C)(C)C)O",
         "category":  "Opioid analgesic",
         "indication":"Pain, opioid use disorder",
         "moa":       "Partial μ-opioid agonist / κ-antagonist",
@@ -406,7 +391,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Naloxone",
-        "smiles":    "O=C1OC[C@H]2c3cc4c(cc3[C@@H](O)[C@@]3(CCN(CC=C)[C@H]23)C4)O1",
+        "smiles":    "C=CCN1CC[C@]23[C@@H]4C(=O)CC[C@]2([C@H]1CC5=C3C(=C(C=C5)O)O4)O",
         "category":  "Opioid antagonist",
         "indication":"Opioid overdose reversal",
         "moa":       "μ-opioid receptor antagonist",
@@ -416,7 +401,7 @@ CNS_DRUG_DATABASE = [
     # ── Non-opioid Analgesics / Migraine ──────────────────────────────────────
     {
         "name":      "Sumatriptan",
-        "smiles":    "CNS(=O)(=O)Cc1ccc2[nH]cc(CCN(C)C)c2c1",
+        "smiles":    "CNS(=O)(=O)CC1=CC2=C(C=C1)NC=C2CCN(C)C",
         "category":  "Migraine",
         "indication":"Acute migraine",
         "moa":       "5-HT1B/1D agonist — triptan",
@@ -424,7 +409,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Rizatriptan",
-        "smiles":    "CN(C)Cc1c[nH]c2ccc(CCN3C=NC(C)=N3)cc12",
+        "smiles":    "CN(C)CCC1=CNC2=C1C=C(C=C2)CN3C=NC=N3",
         "category":  "Migraine",
         "indication":"Acute migraine",
         "moa":       "5-HT1B/1D agonist",
@@ -432,9 +417,9 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Topiramate",
-        "smiles":    "CC1(C)OC2COC3(COS(N)(=O)=O)OC1C2O3",
-        "category":  "Migraine",
-        "indication":"Migraine prophylaxis",
+        "smiles":    "CC1(O[C@@H]2CO[C@@]3([C@H]([C@@H]2O1)OC(O3)(C)C)COS(=O)(=O)N)C",
+        "category":  "Migraine, Epilepsy",
+        "indication":"Migraine prophylaxis, Epilepsy",
         "moa":       "Na⁺ channel blocker, AMPA antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
@@ -442,7 +427,7 @@ CNS_DRUG_DATABASE = [
     # ── ADHD ──────────────────────────────────────────────────────────────────
     {
         "name":      "Methylphenidate",
-        "smiles":    "COC(=O)[C@@H](c1ccccc1)C1CCCCN1",
+        "smiles":    "COC(=O)C(C1CCCCN1)C2=CC=CC=C2",
         "category":  "ADHD",
         "indication":"ADHD, narcolepsy",
         "moa":       "DAT/NET reuptake inhibitor",
@@ -450,7 +435,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Atomoxetine",
-        "smiles":    "CNC[C@@H](c1ccccc1)Oc1ccccc1C",
+        "smiles":    "CC1=CC=CC=C1O[C@H](CCNC)C2=CC=CC=C2",
         "category":  "ADHD",
         "indication":"ADHD",
         "moa":       "Selective NET reuptake inhibitor",
@@ -458,7 +443,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Lisdexamfetamine",
-        "smiles":    "NCCCC[C@@H](N)C(=O)N[C@@H](Cc1ccccc1)C(=O)O",
+        "smiles":    "C[C@@H](CC1=CC=CC=C1)NC(=O)[C@H](CCCCN)N",
         "category":  "ADHD",
         "indication":"ADHD, binge eating disorder",
         "moa":       "Prodrug of d-amphetamine — DAT/NET releaser",
@@ -468,7 +453,7 @@ CNS_DRUG_DATABASE = [
     # ── Multiple Sclerosis ────────────────────────────────────────────────────
     {
         "name":      "Baclofen",
-        "smiles":    "OC(=O)CC(N)Cc1ccc(Cl)cc1",
+        "smiles":    "C1=CC(=CC=C1C(CC(=O)O)CN)Cl",
         "category":  "Multiple sclerosis / spasticity",
         "indication":"Spasticity (MS, spinal injury)",
         "moa":       "GABAB receptor agonist",
@@ -476,35 +461,16 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Tizanidine",
-        "smiles":    "Clc1cc2c(cc1Cl)N=C(NCC=C)S2",
+        "smiles":    "C1CN=C(N1)NC2=C(C=CC3=NSN=C32)Cl",
         "category":  "Multiple sclerosis / spasticity",
         "indication":"Spasticity",
         "moa":       "α2-adrenergic agonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
-
-    # ── Neuropathic pain / CNS pain modulation ────────────────────────────────
-    {
-        "name":      "Amitriptyline",
-        "smiles":    "CN(C)CCC=C1c2ccccc2CCc2ccccc21",
-        "category":  "Neuropathic pain",
-        "indication":"Neuropathic pain, depression, migraine prophylaxis",
-        "moa":       "TCA — NE/5-HT reuptake inhibitor",
-        "bbb_mechanism": "Passive transcellular diffusion",
-    },
-    {
-        "name":      "Duloxetine",
-        "smiles":    "CNCCc1ccc2cccc(OC(c3ccccc3)c3cccs3)c2c1",
-        "category":  "Neuropathic pain",
-        "indication":"Diabetic neuropathy, fibromyalgia",
-        "moa":       "SNRI",
-        "bbb_mechanism": "Passive transcellular diffusion",
-    },
-
     # ── General Anaesthetics / Sedatives ──────────────────────────────────────
     {
         "name":      "Propofol",
-        "smiles":    "CC(C)c1cccc(C(C)C)c1O",
+        "smiles":    "CC(C)C1=C(C(=CC=C1)C(C)C)O",
         "category":  "Anaesthetic",
         "indication":"General anaesthesia, procedural sedation",
         "moa":       "GABAA PAM (potentiates Cl⁻ current)",
@@ -512,7 +478,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Ketamine",
-        "smiles":    "O=C1CCCN1[C@@]1(Cl)CCCCC1",
+        "smiles":    "CNC1(CCCCC1=O)C2=CC=CC=C2Cl",
         "category":  "Anaesthetic",
         "indication":"Anaesthesia, treatment-resistant depression",
         "moa":       "NMDA receptor antagonist",
@@ -520,7 +486,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Midazolam",
-        "smiles":    "Cn1cc2c(n1)CN=C(c1ccccc1F)c1cc(Cl)ccc1-2",
+        "smiles":    "CC1=NC=C2N1C3=C(C=C(C=C3)Cl)C(=NC2)C4=CC=CC=C4F",
         "category":  "Anaesthetic",
         "indication":"Procedural sedation, status epilepticus",
         "moa":       "Benzodiazepine — GABAA PAM",
@@ -528,17 +494,17 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Dexmedetomidine",
-        "smiles":    "Cc1ccc(C[C@@H](C)c2[nH]ccn2)cc1C",
+        "smiles":    "CC1=C(C(=CC=C1)[C@H](C)C2=CN=CN2)C",
         "category":  "Anaesthetic",
         "indication":"ICU sedation",
         "moa":       "α2-adrenergic agonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
-    # ── Stimulants / Wakefulness ──────────────────────────────────────────────
+    # ── Stimulants  ───────────────────────────────────────────────────────
     {
         "name":      "Caffeine",
-        "smiles":    "Cn1cnc2c1c(=O)n(C)c(=O)n2C",
+        "smiles":    "CN1C=NC2=C1C(=O)N(C(=O)N2C)C",
         "category":  "Stimulant",
         "indication":"CNS stimulant, apnoea of prematurity",
         "moa":       "Adenosine A1/A2A receptor antagonist",
@@ -546,7 +512,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Modafinil",
-        "smiles":    "NS(=O)(=O)c1ccc(C(Cc2ccccc2)S(=O)c2ccccc2)cc1",
+        "smiles":    "C1=CC=C(C=C1)C(C2=CC=CC=C2)S(=O)CC(=O)N",
         "category":  "Stimulant",
         "indication":"Narcolepsy, shift work disorder",
         "moa":       "DAT inhibitor / wakefulness-promoting (exact MOA unclear)",
@@ -556,7 +522,7 @@ CNS_DRUG_DATABASE = [
     # ── Mood Stabilisers ──────────────────────────────────────────────────────
     {
         "name":      "Lithium carbonate",
-        "smiles":    "[Li+].[Li+].[O-]C([O-])=O",
+        "smiles":    "[Li+].[Li+].C(=O)([O-])[O-]",
         "category":  "Mood stabiliser",
         "indication":"Bipolar disorder, cluster headache",
         "moa":       "GSK-3β inhibitor, inositol depletion",
@@ -564,7 +530,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Lamotrigine",
-        "smiles":    "Nc1nc2cc(Cl)c(Cl)cc2c(=O)[nH]1",
+        "smiles":    "C1=CC(=C(C(=C1)Cl)Cl)C2=C(N=C(N=N2)N)N",
         "category":  "Mood stabiliser",
         "indication":"Bipolar disorder, epilepsy",
         "moa":       "Na⁺ channel blocker",
@@ -574,7 +540,7 @@ CNS_DRUG_DATABASE = [
     # ── Addiction / Substance Use ─────────────────────────────────────────────
     {
         "name":      "Naltrexone",
-        "smiles":    "OC1=CC=C2[C@@]3(CCN(CC=C)[C@@H]4C[C@@]35CC[C@H](O)[C@H]5[C@H]14)O2",
+        "smiles":    "C1CC1CN2CC[C@]34[C@@H]5C(=O)CC[C@]3([C@H]2CC6=C4C(=C(C=C6)O)O5)O",
         "category":  "Addiction",
         "indication":"Opioid/alcohol use disorder",
         "moa":       "μ-opioid receptor antagonist",
@@ -582,7 +548,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Varenicline",
-        "smiles":    "N[C@@H]1CCCC[C@@H]1NC(=O)c1cccnc1",
+        "smiles":    "C1[C@@H]2CNC[C@H]1C3=CC4=NC=CN=C4C=C23",
         "category":  "Addiction",
         "indication":"Smoking cessation",
         "moa":       "Partial α4β2 nicotinic ACh receptor agonist",
@@ -590,7 +556,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Acamprosate",
-        "smiles":    "CC(CCS(=O)(=O)O)NC(C)C",
+        "smiles":    "CC(=O)NCCCS(=O)(=O)O",
         "category":  "Addiction",
         "indication":"Alcohol use disorder",
         "moa":       "NMDA receptor modulator / GABAA agonist",
@@ -600,7 +566,7 @@ CNS_DRUG_DATABASE = [
     # ── Headache / CNS Vascular ───────────────────────────────────────────────
     {
         "name":      "Ergotamine",
-        "smiles":    "CC[C@H]1C(=O)N2CCC[C@@H]2[C@H]2Oc3c(C2=O)ccc4c3[nH]c3ccccc34",
+        "smiles":    "C[C@@]1(C(=O)N2[C@H](C(=O)N3CCC[C@H]3[C@@]2(O1)O)CC4=CC=CC=C4)NC(=O)[C@H]5CN([C@@H]6CC7=CNC8=CC=CC(=C78)C6=C5)C",
         "category":  "Migraine",
         "indication":"Acute migraine, cluster headache",
         "moa":       "5-HT1B/1D agonist + partial agonist at α-adrenergic receptors",
@@ -610,7 +576,7 @@ CNS_DRUG_DATABASE = [
     # ── Spinal cord / muscle relaxants ───────────────────────────────────────
     {
         "name":      "Cyclobenzaprine",
-        "smiles":    "CN(C)CCC=C1c2ccccc2CCc2ccccc21",
+        "smiles":    "CN(C)CCC=C1C2=CC=CC=C2C=CC3=CC=CC=C31",
         "category":  "Muscle relaxant",
         "indication":"Muscle spasm",
         "moa":       "Central α1/5-HT2 antagonist (structurally TCA-like)",
@@ -618,7 +584,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Carisoprodol",
-        "smiles":    "CC(CC)(COC(N)=O)COC(=O)NC(C)C",
+        "smiles":    "CCCC(C)(COC(=O)N)COC(=O)NC(C)C",
         "category":  "Muscle relaxant",
         "indication":"Acute musculoskeletal pain",
         "moa":       "GABAA PAM (metabolised to meprobamate)",
@@ -628,7 +594,7 @@ CNS_DRUG_DATABASE = [
     # ── Cognitive enhancers / Nootropics ─────────────────────────────────────
     {
         "name":      "Piracetam",
-        "smiles":    "NC(=O)CN1CCCC1=O",
+        "smiles":    "C1CC(=O)N(C1)CC(=O)N",
         "category":  "Nootropic",
         "indication":"Cognitive impairment, myoclonus",
         "moa":       "Racetam — AMPA receptor modulator (exact MOA unclear)",
@@ -646,28 +612,17 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Edaravone",
-        "smiles":    "Cc1cc(=O)n(-c2ccccc2)n1",
+        "smiles":    "[2H]C1=C(C(=C(C(=C1[2H])[2H])N2C(=O)CC(=N2)C)[2H])[2H]",
         "category":  "ALS",
         "indication":"ALS — free radical scavenger (approved in Japan/US)",
         "moa":       "Reactive oxygen species scavenger",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
-    # Tofersen is an antisense oligonucleotide (ASO) — intrathecal delivery only.
-    # Its SMILES represents a simplified phosphorothioate backbone segment.
-    # It does NOT cross the BBB and is included as a CNS-adjacent peripheral control.
-    {
-        "name":      "Tofersen",
-        "smiles":    "O=P(O)(O)OCC1OC(n2ccc(=O)[nH]c2=O)CC1OP(=O)(O)O",
-        "category":  "ALS",
-        "indication":"SOD1-ALS — antisense oligonucleotide (intrathecal)",
-        "moa":       "SOD1 mRNA-targeting antisense oligonucleotide — reduces mutant SOD1 protein",
-        "bbb_mechanism": "Does not cross BBB — delivered intrathecally directly to CSF",
-    },
 
     # ── SMA (Spinal Muscular Atrophy) ─────────────────────────────────────────
     {
         "name":      "Risdiplam",
-        "smiles":    "Cc1cc2c(nc1CN1CC[C@@H](O)C1)N(c1ccncc1)C(=O)c1cc(F)ccc1-2",
+        "smiles":    "CC1=CC(=NN2C1=NC(=C2)C)C3=CC(=O)N4C=C(C=CC4=N3)N5CCNC6(C5)CC6",
         "category":  "SMA",
         "indication":"Spinal muscular atrophy — oral SMN2 splicing modifier",
         "moa":       "SMN2 pre-mRNA splicing modifier — increases full-length SMN protein",
@@ -677,7 +632,7 @@ CNS_DRUG_DATABASE = [
     # ── Huntington's Disease ──────────────────────────────────────────────────
     {
         "name":      "Tetrabenazine",
-        "smiles":    "COc1ccc2c(c1)C[C@H]1CC(=O)[C@@H](c3ccc(OC)c(OC)c3)N1CC2",
+        "smiles":    "CC(C)CC1CN2CCC3=CC(=C(C=C3C2CC1=O)OC)OC",
         "category":  "Huntington's",
         "indication":"Huntington's disease chorea, tardive dyskinesia",
         "moa":       "VMAT2 inhibitor — depletes presynaptic monoamine stores",
@@ -685,7 +640,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Deutetrabenazine",
-        "smiles":    "COc1ccc2c(c1)C[C@H]1CC(=O)[C@@H](c3ccc(OC)c(OC([2H])([2H])[2H])c3)N1CC2",
+        "smiles":    "[2H]C([2H])([2H])OC1=C(C=C2[C@@H]3CC(=O)[C@H](CN3CCC2=C1)CC(C)C)OC([2H])([2H])[2H]",
         "category":  "Huntington's",
         "indication":"Huntington's disease chorea, tardive dyskinesia",
         "moa":       "VMAT2 inhibitor — deuterated tetrabenazine analogue (improved PK)",
@@ -703,7 +658,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Siponimod",
-        "smiles":    "CC(C)(C)c1ccc(C[C@@H](NC(=O)c2cccc(C3CC3)c2)c2ccc(cc2)-c2cc(C(F)(F)F)nn2-c2ccccc2)cc1",
+        "smiles":    "CCC1=C(C=CC(=C1)/C(=N/OCC2=CC(=C(C=C2)C3CCCCC3)C(F)(F)F)/C)CN4CC(C4)C(=O)O",
         "category":  "Multiple sclerosis",
         "indication":"Secondary progressive MS",
         "moa":       "S1P1/S1P5 receptor modulator — sequesters lymphocytes in lymph nodes",
@@ -713,7 +668,7 @@ CNS_DRUG_DATABASE = [
     # ── Narcolepsy / Wakefulness disorders ───────────────────────────────────
     {
         "name":      "Sodium oxybate",
-        "smiles":    "OCC(=O)O",
+        "smiles":    "C(CC(=O)[O-])CO.[Na+]",
         "category":  "Narcolepsy",
         "indication":"Narcolepsy with cataplexy",
         "moa":       "GABAB agonist / GHB receptor agonist",
@@ -721,7 +676,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Pitolisant",
-        "smiles":    "O(CCCc1ccc(Cl)cc1)CCCCN1CCC(CC1)n1cnc2ccccc21",
+        "smiles":    "C1CCN(CC1)CCCOCCCC2=CC=C(C=C2)Cl",
         "category":  "Narcolepsy",
         "indication":"Narcolepsy",
         "moa":       "Histamine H3 receptor inverse agonist/antagonist",
@@ -731,7 +686,7 @@ CNS_DRUG_DATABASE = [
     # ── Vertigo / Vestibular ──────────────────────────────────────────────────
     {
         "name":      "Betahistine",
-        "smiles":    "CNNCc1ccncc1",
+        "smiles":    "CNCCC1=CC=CC=N1",
         "category":  "Vestibular",
         "indication":"Ménière's disease, vertigo",
         "moa":       "H1 agonist / H3 antagonist — improves labyrinthine blood flow",
@@ -741,7 +696,7 @@ CNS_DRUG_DATABASE = [
     # ── Neuroprotection / Cerebrovascular ────────────────────────────────────
     {
         "name":      "Nimodipine",
-        "smiles":    "CCOC(=O)C1=C(C)NC(=C(C1c1ccc([N+](=O)[O-])cc1)C(=O)OC(C)C)C",
+        "smiles":    "CC1=C(C(C(=C(N1)C)C(=O)OC(C)C)C2=CC(=CC=C2)[N+](=O)[O-])C(=O)OCCOC",
         "category":  "Cerebrovascular",
         "indication":"Subarachnoid haemorrhage — prevents vasospasm",
         "moa":       "L-type Ca²⁺ channel blocker (CNS-selective)",
@@ -749,7 +704,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Vinpocetine",
-        "smiles":    "CCOC(=O)[C@@H]1CC(=CCN2CCC3c4ccccc4N(C3=O)[C@H]12)C",
+        "smiles":    "CC[C@@]12CCCN3[C@@H]1C4=C(CC3)C5=CC=CC=C5N4C(=C2)C(=O)OCC",
         "category":  "Cerebrovascular",
         "indication":"Cognitive impairment, cerebrovascular disorders",
         "moa":       "PDE1 inhibitor; Na⁺ channel blocker; cerebral vasodilator",
@@ -759,7 +714,7 @@ CNS_DRUG_DATABASE = [
     # ── Nausea / CNS antiemetics ──────────────────────────────────────────────
     {
         "name":      "Ondansetron",
-        "smiles":    "Cc1ccc2[nH]c(=O)n(CC3CCN(C)CC3)c2c1",
+        "smiles":    "CC1=NC=CN1CC2CCC3=C(C2=O)C4=CC=CC=C4N3C",
         "category":  "Antiemetic",
         "indication":"Chemotherapy-induced nausea, post-operative nausea",
         "moa":       "5-HT3 receptor antagonist",
@@ -767,7 +722,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Metoclopramide",
-        "smiles":    "CCN(CC)CCNC(=O)c1cc(Cl)c(N)cc1OC",
+        "smiles":    "CCN(CC)CCNC(=O)C1=CC(=C(C=C1OC)N)Cl",
         "category":  "Antiemetic",
         "indication":"Nausea, gastroparesis",
         "moa":       "D2 antagonist / 5-HT4 agonist",
@@ -777,7 +732,7 @@ CNS_DRUG_DATABASE = [
     # ── Peripherally-acting controls (intentionally poor CNS) ────────────────
     {
         "name":      "Atenolol",
-        "smiles":    "CC(C)NCC(O)COc1ccc(CC(N)=O)cc1",
+        "smiles":    "CC(C)NCC(COC1=CC=C(C=C1)CC(=O)N)O",
         "category":  "Peripheral control",
         "indication":"Hypertension (peripheral beta-blocker — low CNS penetration)",
         "moa":       "β1-adrenergic antagonist",
@@ -785,7 +740,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Neostigmine",
-        "smiles":    "CN(C)C(=O)Oc1ccc(cc1)[N+](C)(C)C",
+        "smiles":    "CN(C)C(=O)OC1=CC=CC(=C1)[N+](C)(C)C",
         "category":  "Peripheral control",
         "indication":"Myasthenia gravis, reversal of NMB (peripheral)",
         "moa":       "Quaternary AChE inhibitor — does not cross BBB",

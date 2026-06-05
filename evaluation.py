@@ -1,7 +1,6 @@
 """
-evaluate_models.py
-
-Comprehensive evaluation suite for MetricularPro.
+evaluation.py - Neuricular's model evaluation and performance analysis module
+=============================
 
 Outputs:
     results/

@@ -1,5 +1,5 @@
 """
-chem_calc.py — MetricularPro
+chem_calc.py — Neuricular's chemistry calculator module
 =============================
 Molecular descriptor calculations and CNS MPO scoring.
 

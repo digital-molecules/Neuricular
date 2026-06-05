@@ -1,5 +1,5 @@
 """
-explanations.py — MetricularPro
+explanations.py — Neuricular's dynamic explanation generator for ML predictions and CNS MPO scoring
 ================================
 Dynamic, molecule-specific explanations for ML and scoring results.
 

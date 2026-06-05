@@ -1,5 +1,5 @@
 """
-ml_predict.py — MetricularPro
+ml_predict.py — Neuricular's runtime prediction helpers for the Streamlit app
 ==============================
 Runtime prediction helpers loaded by the Streamlit app.
 
@@ -16,8 +16,6 @@ import numpy as np
 from chem_calc import get_morgan_fp_array
 from exceptions import InvalidSMILESError, ModelLoadError, PredictionError
 from schemas import ModelArtefact, PredictionResult
-from chem_calc import get_descriptor_profile
-from ml_model import _smiles_to_fp
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +74,45 @@ def load_model(path: str) -> ModelArtefact:
 
 # ── Inference ─────────────────────────────────────────────────────────────────
 
+def _build_inference_features(smiles: str) -> np.ndarray:
+    """
+    Build the combined feature vector for inference — must exactly match
+    the vector built by ml_model._build_features() at training time:
+        [Morgan fingerprint (2048 bits)] + [8 physicochemical descriptors]
+        = 2056 features total, dtype float32.
+
+    Descriptor order: MW, logP, logD, TPSA, HBD, HBA, RotBonds, QED
+
+    Raises
+    ------
+    InvalidSMILESError  — SMILES cannot be parsed
+    PredictionError     — descriptor calculation failed
+    """
+    from chem_calc import get_descriptor_profile
+
+    fp_list = get_morgan_fp_array(smiles)   # raises InvalidSMILESError if bad
+
+    try:
+        desc = get_descriptor_profile(smiles)
+    except Exception as exc:
+        raise PredictionError(
+            f"Descriptor calculation failed for '{smiles}': {exc}"
+        ) from exc
+
+    desc_vec = [
+        desc.mw,
+        desc.logp,
+        desc.logd,
+        desc.tpsa,
+        float(desc.hbd),
+        float(desc.hba),
+        float(desc.rotbond),
+        desc.qed,
+    ]
+
+    return np.array(fp_list + desc_vec, dtype=np.float32).reshape(1, -1)
+
+
 def _predict(smiles: str, artefact: ModelArtefact,
              pos_label: str, neg_label: str) -> PredictionResult:
     """
@@ -84,32 +121,18 @@ def _predict(smiles: str, artefact: ModelArtefact,
     Raises
     ------
     InvalidSMILESError  — SMILES cannot be parsed (propagated from chem_calc)
-    PredictionError     — fingerprint length mismatch or sklearn inference error
+    PredictionError     — feature construction or sklearn inference error
     """
-    fp_list = get_morgan_fp_array(smiles)
-    desc = get_descriptor_profile(smiles)
+    X = _build_inference_features(smiles)
 
-    desc_vec = [
-        desc.mw,
-        desc.logp,
-        desc.logd,
-        desc.tpsa,
-        desc.hbd,
-        desc.hba,
-        desc.rotbond,
-        desc.qed,
-    ]
-
-    X = np.array(fp_list + desc_vec, dtype=np.float32).reshape(1, -1)
-
-    if len(fp_list) != artefact.fp_nbits:
+    expected = artefact.fp_nbits + 8   # 2048 fingerprint bits + 8 descriptors
+    if X.shape[1] != expected:
         raise PredictionError(
-            f"Fingerprint length mismatch: molecule has {len(fp_list)} bits "
-            f"but model '{artefact.dataset_name}' expects {artefact.fp_nbits}. "
-            "Ensure FP_NBITS is consistent between ml_model.py and ml_predict.py."
+            f"Feature vector length mismatch: built {X.shape[1]} features "
+            f"but model '{artefact.dataset_name}' expects {expected}. "
+            "Re-run ml_model.py to retrain with the current feature set."
         )
 
-    X = np.array(fp_list, dtype=np.uint8).reshape(1, -1)
     try:
         prob = float(artefact.model.predict_proba(X)[0][1])
     except Exception as exc:
@@ -143,105 +166,66 @@ def get_top_features(artefact: ModelArtefact, n: int = 20) -> tuple:
     top_idx     = np.argsort(importances)[::-1][:n]
     return top_idx, importances[top_idx]
 
-def _build_features(smiles: str):
-    fp = get_morgan_fp_array(smiles)
-    desc = get_descriptor_profile(smiles)
-
-    desc_vec = [
-        desc.mw,
-        desc.logp,
-        desc.logd,
-        desc.tpsa,
-        desc.hbd,
-        desc.hba,
-        desc.rotbond,
-        desc.qed,
-    ]
-
-    return fp + desc_vec
 
 # ── CNS reference drug panel ──────────────────────────────────────────────────
 #
-# Structured data driving the Reference Drugs tab in app.py.
-# Each entry documents the BBB mechanism explicitly so the UI can distinguish
-# mechanistically interesting model failures from noise.
+# SMILES are sourced exclusively from cns_drugs.py (single source of truth).
+# Pharmacological annotations (known BBB status, model agreement expectation,
+# discussion points) are maintained here as a lookup dict keyed by drug name,
+# then merged at runtime into CNS_REFERENCE_DRUGS.
+#
+# To add a new reference drug: add it to cns_drugs.py first, then add its
+# annotation entry to _REFERENCE_ANNOTATIONS below.
 
-CNS_REFERENCE_DRUGS = [
-    {
-        "name":                  "Donepezil",
-        "smiles":                "COc1cc2c(cc1OC)CC(CC(=O)c1ccccc1)C2",
-        "indication":            "Alzheimer's disease — AChE inhibitor",
+_REFERENCE_ANNOTATIONS = {
+    "Donepezil": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion",
         "expected_model_agrees": True,
         "discussion_point": (
             "Lipophilic, low-polarity scaffold — passive diffusion is well-captured "
             "by fingerprint models. Expected true positive."
         ),
     },
-    {
-        "name":                  "Sertraline",
-        "smiles":                "CNC1CCC(c2ccc(Cl)c(Cl)c2)c2ccccc21",
-        "indication":            "Depression — SSRI",
+    "Sertraline": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion",
         "expected_model_agrees": True,
         "discussion_point": (
             "Classic lipophilic amine. Must reach serotonin transporters in the CNS. "
             "Model should predict high permeability — good positive control."
         ),
     },
-    {
-        "name":                  "Clozapine",
-        "smiles":                "CN1CCN(c2nc3ccccc3nc2Cl)CC1",
-        "indication":            "Schizophrenia — atypical antipsychotic",
+    "Clozapine": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion",
         "expected_model_agrees": True,
         "discussion_point": (
             "High CNS penetration underpins both its efficacy and its haematological "
             "side-effect profile. Reliable benchmark for a true positive."
         ),
     },
-    {
-        "name":                  "Levodopa", "category": "Anti-Parkinsonian",
-        "smiles":                "N[C@@H](Cc1ccc(O)c(O)c1)C(=O)O",
-        "indication":            "Parkinson's disease — dopamine precursor",
+    "Levodopa": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "LAT1 active transporter — not passive diffusion",
         "expected_model_agrees": False,
         "discussion_point": (
             "CONFIRMED FAILURE CASE (P ≈ 0.36, moderate confidence): Levodopa is polar "
-            "and zwitterionic — its catechol + amino acid scaffold carries fingerprint "
-            "bits strongly associated with non-permeable compounds in the BBBP training "
-            "set. The model confidently predicts low permeability. In reality, levodopa "
+            "and zwitterionic. A fingerprint model predicts low permeability, yet it "
             "crosses the BBB via the LAT1 large amino acid transporter. "
             "Compare with gabapentin: also a LAT1 substrate, but correctly predicted "
             "as permeable because its cyclohexane ring contributes lipophilic bits that "
             "resemble passive diffusion scaffolds. Levodopa has no such compensating "
-            "structural features. This is the cleanest example in this panel of a "
-            "mechanism-invisible failure — and the most scientifically interesting "
-            "talking point for the poster."
+            "structural features — the cleanest example in this panel of a "
+            "mechanism-invisible failure."
         ),
     },
-    {
-        "name":                  "Memantine",
-        "smiles":                "CC12CC(CC(C1)(CN)C)(C2)N",
-        "indication":            "Alzheimer's disease — NMDA antagonist",
+    "Memantine": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion",
         "expected_model_agrees": True,
         "discussion_point": (
             "Adamantane scaffold contributes strong lipophilicity; designed for rapid "
             "CNS penetration. Useful structural contrast with the polar levodopa case."
         ),
     },
-    {
-        "name":                  "Valproic acid",
-        "smiles":                "CCCC(CCC)C(=O)O",
-        "indication":            "Epilepsy / bipolar — mood stabiliser",
+    "Valproic acid": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion (MCT contribution reported)",
         "expected_model_agrees": True,
         "discussion_point": (
             "Small, lipophilic carboxylic acid. Low CNS MPO score likely due to "
@@ -249,24 +233,16 @@ CNS_REFERENCE_DRUGS = [
             "Illustrates limitations of MPO for very small molecules."
         ),
     },
-    {
-        "name":                  "Caffeine",
-        "smiles":                "Cn1cnc2c1c(=O)n(C)c(=O)n2C",
-        "indication":            "CNS stimulant — adenosine antagonist",
+    "Caffeine": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Passive transcellular diffusion",
         "expected_model_agrees": True,
         "discussion_point": (
             "Textbook CNS compound and positive control. Low MW, moderate logP, "
             "low TPSA — sits comfortably within CNS MPO space."
         ),
     },
-    {
-        "name":                  "Atenolol",
-        "smiles":                "CC(C)NCC(O)COc1ccc(CC(N)=O)cc1",
-        "indication":            "Hypertension — peripheral beta-blocker",
+    "Atenolol": {
         "known_bbb_permeable":   False,
-        "bbb_mechanism":         "Excluded by high polarity and P-gp efflux; intentionally peripheral",
         "expected_model_agrees": True,
         "discussion_point": (
             "Deliberately designed NOT to cross the BBB to avoid CNS side effects "
@@ -274,44 +250,51 @@ CNS_REFERENCE_DRUGS = [
             "Good true-negative control — model should correctly predict low permeability."
         ),
     },
-    {
-        "name":                  "Morphine", "category": "Opioid Analgesic",
-        "smiles":                "CN1CC[C@]23c4c5ccc(O)c4O[C@H]2[C@@H](O)C=C[C@@H]3[C@@H]1C5",
-        "indication":            "Opioid analgesic — MOR agonist",
+    "Morphine": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "Partial passive diffusion; P-gp substrate limits CNS exposure",
         "expected_model_agrees": True,
         "discussion_point": (
             "OVERCONFIDENCE CASE (P = 1.0, high confidence): The model predicts morphine "
-            "as BBB-permeable with maximum probability — the highest in this entire panel. "
-            "This is technically correct, but the certainty is misleading. In reality, "
-            "morphine is a P-glycoprotein (P-gp) efflux substrate, meaning a significant "
-            "fraction of molecules that cross the BBB are actively pumped back out, "
-            "substantially limiting free CNS exposure relative to more lipophilic opioids "
-            "like fentanyl or oxycodone. The BBBP dataset uses a binary permeable/not-permeable "
-            "label that cannot encode this nuance — morphine is labelled permeable, the model "
-            "learned that confidently, and likely reinforced it by seeing structurally related "
-            "opioid scaffolds throughout the training set. A probability of 1.0 does not mean "
-            "the model understands the pharmacology; it means the morphine scaffold is "
-            "overrepresented or highly consistent in the training data. This is a case where "
-            "model confidence and pharmacological reality diverge in a clinically relevant way."
+            "as BBB-permeable with maximum probability — the highest in the entire panel. "
+            "This is technically correct, but the certainty is misleading. Morphine is a "
+            "P-glycoprotein (P-gp) efflux substrate, substantially limiting free CNS "
+            "exposure relative to more lipophilic opioids like fentanyl. The BBBP dataset "
+            "uses a binary label that cannot encode this nuance. P = 1.0 does not mean the "
+            "model understands the pharmacology — it means the opioid scaffold is "
+            "overrepresented or highly consistent in the training data."
         ),
     },
-    {
-        "name":                  "Gabapentin", "category": "Anticonvulsant",
-        "smiles":                "NCC1(CC(=O)O)CCCCC1",
-        "indication":            "Epilepsy / neuropathic pain — voltage-gated Ca²⁺ channel modulator",
+    "Gabapentin": {
         "known_bbb_permeable":   True,
-        "bbb_mechanism":         "LAT1 transporter — same mechanism as levodopa",
         "expected_model_agrees": True,
         "discussion_point": (
             "Interesting contrast to levodopa: gabapentin is also a LAT1 substrate, yet "
             "the model correctly predicts BBB permeability (P ≈ 0.93, high confidence). "
-            "This is likely because gabapentin's cyclohexane scaffold contributes enough "
-            "lipophilic fingerprint bits to resemble passively-permeable compounds in the "
-            "training set, even though its actual mechanism is active transport. "
+            "Likely because its cyclohexane scaffold contributes lipophilic fingerprint "
+            "bits resembling passively-permeable compounds in the training set. "
             "The correct prediction here is for the wrong structural reason — a useful "
             "reminder that model accuracy does not imply mechanistic understanding."
         ),
     },
-]
+}
+
+# Build CNS_REFERENCE_DRUGS by merging cns_drugs.py SMILES with annotations above.
+# Only drugs that have an entry in _REFERENCE_ANNOTATIONS are included,
+# ensuring the reference panel stays curated rather than using all 90 drugs.
+def _build_reference_panel() -> list:
+    from cns_drugs import CNS_DRUG_DATABASE
+    db_by_name = {d["name"]: d for d in CNS_DRUG_DATABASE}
+    panel = []
+    for name, annotation in _REFERENCE_ANNOTATIONS.items():
+        if name not in db_by_name:
+            logger.warning(
+                "Reference drug '%s' is in _REFERENCE_ANNOTATIONS but not in "
+                "cns_drugs.CNS_DRUG_DATABASE — skipping.", name
+            )
+            continue
+        entry = {**db_by_name[name], **annotation}
+        panel.append(entry)
+    return panel
+
+CNS_REFERENCE_DRUGS = _build_reference_panel()
+

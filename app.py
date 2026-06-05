@@ -1,5 +1,5 @@
 """
-app.py — Neuricular
+app.py — Neuricular's frontend Streamlit application
 ======================
 CNS Drug Candidate Screening Pipeline
 
@@ -244,8 +244,8 @@ with col_hint:
     st.markdown(
         "<div style='font-family:IBM Plex Mono,monospace; font-size:0.7rem; "
         "color:#4a5568; padding-top:0.65rem;'>"
-        "e.g. donepezil: <span style='color:#4a9eff;'>"
-        "COc1cc2c(cc1OC)CC(CC(=O)c1ccccc1)C2</span></div>",
+        "e.g. Riluzole: <span style='color:#4a9eff;'>"
+        "C1=CC2=C(C=C1OC(F)(F)F)SC(=N2)N</span></div>",
         unsafe_allow_html=True,
     )
 
@@ -402,7 +402,7 @@ with tab1:
             st.markdown(
                 "<div style='font-family:IBM Plex Sans,sans-serif; font-size:0.82rem; "
                 "color:#6a7a90; margin-bottom:1rem;'>"
-                "Tanimoto similarity against a curated library of 90 approved CNS drugs "
+                "Tanimoto similarity against a curated library of ~65 approved CNS drugs "
                 "spanning psychiatry, neurology, pain, anaesthesia, and addiction medicine. "
                 "Identifies the most structurally related known CNS compounds.</div>",
                 unsafe_allow_html=True,
@@ -937,7 +937,7 @@ with tab4:
 
         **2. Revealing mechanistic blind spots**: levodopa is the clearest failure in this panel.
         It crosses the BBB via the LAT1 large amino acid transporter, yet the model predicts
-        low permeability (P ≈ 0.36) because its polar, zwitterionic catechol-amino acid scaffold
+        low permeability (P ≈ 0.3085) because its polar, zwitterionic catechol-amino acid scaffold
         carries fingerprint bits associated with non-permeable compounds. Gabapentin is also a
         LAT1 substrate but is correctly predicted as permeable (P ≈ 0.93) — likely because its
         cyclohexane ring contributes enough lipophilic bits to superficially resemble a passively

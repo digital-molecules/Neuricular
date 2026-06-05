@@ -1,7 +1,7 @@
 """
-exceptions.py — MetricularPro
+exceptions.py — Neuricular's custom exceptions module
 ==============================
-All custom exceptions for the MetricularPro pipeline, in one place.
+All custom exceptions for the Neuricular pipeline, in one place.
 
 Organising exceptions centrally means:
 - Every module imports from here rather than defining its own error types.
@@ -103,7 +103,7 @@ class ModelTrainingError(RuntimeError):
 class ModelLoadError(RuntimeError):
     """
     Raised when a model pickle file is missing, corrupt, or was created
-    by an incompatible version of scikit-learn or MetricularPro.
+    by an incompatible version of scikit-learn or Neuricular.
 
     The message always includes the instruction to re-run ml_model.py.
     """
