@@ -58,7 +58,7 @@ header[data-testid="stHeader"] { background: transparent; }
 }
 .stTextInput > div > div > input {
     background-color: #151820 !important;
-    border: 1px solid #2a3040 !important;
+    border: 1px solid #5d6987 !important;
     border-radius: 4px !important;
     color: #e0e8f0 !important;
     font-family: 'IBM Plex Mono', monospace !important;
@@ -118,7 +118,7 @@ hr { border-color: #1e2330; }
 div[data-testid="stDataFrame"] { border: 1px solid #1e2330; border-radius: 6px; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0d0f14; }
-::-webkit-scrollbar-thumb { background: #2a3040; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #5d6987; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -126,7 +126,7 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2330; border-radius: 6px; 
 matplotlib.rcParams.update({
     "figure.facecolor": "#111318",
     "axes.facecolor":   "#111318",
-    "axes.edgecolor":   "#2a3040",
+    "axes.edgecolor":   "#5d6987",
     "axes.labelcolor":  "#8a9ab0",
     "xtick.color":      "#6a7a90",
     "ytick.color":      "#6a7a90",
@@ -349,7 +349,7 @@ with tab1:
             ax.set_xticklabels(labels, size=8.5, color="#8a9ab0")
             ax.set_yticklabels([])
             ax.set_ylim(0, 1.4)
-            ax.spines["polar"].set_color("#2a3040")
+            ax.spines["polar"].set_color("#5d6987")
             ax.grid(color="#1e2330", linewidth=0.7)
             ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=7)
             plt.tight_layout()
@@ -568,7 +568,7 @@ with tab2:
             ax.set_xlim(0, 1.28)
             ax.set_xlabel("Contribution (0 → 1)")
             ax.set_title("CNS MPO — Per-property Contributions")
-            ax.axvline(1.0, color="#2a3040", linestyle="--", linewidth=0.9)
+            ax.axvline(1.0, color="#5d6987", linestyle="--", linewidth=0.9)
             ax.grid(axis="x", zorder=0)
             for bar, s, rv in zip(bars, scores, raws):
                 ax.text(
