@@ -206,7 +206,7 @@ _REFERENCE_ANNOTATIONS = {
         "known_bbb_permeable":   True,
         "expected_model_agrees": False,
         "discussion_point": (
-            "CONFIRMED FAILURE CASE (P ≈ 0.36, moderate confidence): Levodopa is polar "
+            "CONFIRMED FAILURE CASE (P = 0.3085, moderate confidence): Levodopa is polar "
             "and zwitterionic. A fingerprint model predicts low permeability, yet it "
             "crosses the BBB via the LAT1 large amino acid transporter. "
             "Compare with gabapentin: also a LAT1 substrate, but correctly predicted "
