@@ -307,7 +307,7 @@ with tab1:
             st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
 
             # Rule badges
-            c1, c2, c3 = st.columns(3)
+            c1, c2 = st.columns(2)
             with c1:
                 (st.success if profile.lipinski else st.warning)(
                     "✓ Lipinski Ro5 passed" if profile.lipinski else "✗ Lipinski Ro5 failed"
@@ -315,10 +315,6 @@ with tab1:
             with c2:
                 (st.success if profile.veber else st.warning)(
                     "✓ Veber's Rule passed" if profile.veber else "✗ Veber's Rule failed"
-                )
-            with c3:
-                (st.success if profile.both_rules else st.warning)(
-                    "✓ Both rules passed" if profile.both_rules else "✗ One or both rules failed"
                 )
 
             st.markdown("<hr>", unsafe_allow_html=True)
