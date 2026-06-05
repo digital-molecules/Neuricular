@@ -156,7 +156,6 @@ def _load_models():
 
 bbbp_model, clintox_model, model_errors = _load_models()
 
-st.caption("By Efthalia Arvanitidou.")
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _label(text: str) -> str:
