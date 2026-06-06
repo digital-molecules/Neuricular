@@ -57,7 +57,7 @@ header[data-testid="stHeader"] { background: transparent; }
     border-right: 1px solid #C9A8BB;
 }
 .stTextInput > div > div > input {
-    background-color: #EDD3DF !important;
+    background-color: #f0e6eb !important;
     border: 1px solid #5d6987 !important;
     border-radius: 4px !important;
     color: #2D4A6B !important;
@@ -70,7 +70,7 @@ header[data-testid="stHeader"] { background: transparent; }
     box-shadow: 0 0 0 2px rgba(74,158,255,0.15) !important;
 }
 [data-testid="metric-container"] {
-    background-color: #EDD3DF;
+    background-color: #f0e6eb;
     border: 1px solid #C9A8BB;
     border-radius: 6px;
     padding: 0.8rem 1rem;
@@ -169,7 +169,7 @@ def _label(text: str) -> str:
 
 def _card(label: str, value: str, color: str = "#2D4A6B") -> str:
     return f"""
-    <div style="background:#EDD3DF; border:1px solid #C9A8BB; border-radius:6px;
+    <div style="background:#f0e6eb; border:1px solid #C9A8BB; border-radius:6px;
                 padding:0.9rem 1rem; margin-bottom:0.4rem;">
         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
                     text-transform:uppercase; letter-spacing:0.08em; color:#7A9ABF;">
