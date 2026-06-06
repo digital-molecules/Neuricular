@@ -562,7 +562,7 @@ with tab2:
             bars = ax.barh(props, scores, color=bar_colors, height=0.52, zorder=2)
             ax.set_xlim(0, 1.28)
             ax.set_xlabel("Contribution (0 → 1)")
-            ax.set_title("CNS MPO - Per-property Contributions")
+            ax.set_title("CNS MPO (Per-property Contributions)")
             ax.axvline(1.0, color="#5d6987", linestyle="--", linewidth=0.9)
             ax.grid(axis="x", zorder=0)
             for bar, s, rv in zip(bars, scores, raws):
@@ -949,8 +949,6 @@ with tab4:
 
 def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     """
-    Generate per-property plain-English explanations for a CNSMPOResult.
-    Returns list of (property_name, explanation_string) tuples.
     Explanation colour: 'good' | 'warn' | 'bad'
     """
     raw   = mpo.raw_values
@@ -1021,7 +1019,7 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
 
 
 def _explain_bbbp(result) -> str:
-    """Generate a dynamic explanation for a BBBP PredictionResult."""
+    """Dynamic explanation for a BBBP PredictionResult."""
     p = result.probability
     if p >= 0.85:
         return (
@@ -1061,7 +1059,7 @@ def _explain_bbbp(result) -> str:
 
 
 def _explain_clintox(result) -> str:
-    """Generate a dynamic explanation for a ClinTox PredictionResult."""
+    """Dynamic explanation for a ClinTox PredictionResult."""
     p = result.probability
     if p <= 0.15:
         return (
