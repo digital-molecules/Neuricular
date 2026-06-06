@@ -46,15 +46,15 @@ st.markdown("""
 
 html, body, [class*="css"] {
     font-family: 'IBM Plex Sans', sans-serif;
-    background-color: #1c1618;
-    color: #c8d0e0;
+    background-color: #F5E6EE;
+    color: #2D4A6B;
 }
-.stApp { background-color: #1c1618; }
+.stApp { background-color: #F5E6EE; }
 header[data-testid="stHeader"] { background: transparent; }
 
 [data-testid="stSidebar"] {
-    background-color: #231519;
-    border-right: 1px solid #2E1F26;
+    background-color: #EDD3DF;
+    border-right: 1px solid #C9A8BB;
 }
 .stTextInput > div > div > input {
     background-color: #151820 !important;
@@ -66,12 +66,12 @@ header[data-testid="stHeader"] { background: transparent; }
     padding: 0.6rem 0.9rem !important;
 }
 .stTextInput > div > div > input:focus {
-    border-color: #7BA7CC !important;
+    border-color: #3D6A99 !important;
     box-shadow: 0 0 0 2px rgba(74,158,255,0.15) !important;
 }
 [data-testid="metric-container"] {
     background-color: #151820;
-    border: 1px solid #2E1F26;
+    border: 1px solid #C9A8BB;
     border-radius: 6px;
     padding: 0.8rem 1rem;
 }
@@ -88,13 +88,13 @@ header[data-testid="stHeader"] { background: transparent; }
     color: #e0e8f0 !important;
 }
 [data-testid="stExpander"] {
-    background-color: #231519;
-    border: 1px solid #2E1F26 !important;
+    background-color: #EDD3DF;
+    border: 1px solid #C9A8BB !important;
     border-radius: 6px;
 }
 [data-baseweb="tab-list"] {
-    background-color: #231519;
-    border-bottom: 1px solid #2E1F26;
+    background-color: #EDD3DF;
+    border-bottom: 1px solid #C9A8BB;
     gap: 0;
 }
 [data-baseweb="tab"] {
@@ -106,32 +106,32 @@ header[data-testid="stHeader"] { background: transparent; }
     padding: 0.7rem 1.4rem;
 }
 [aria-selected="true"] {
-    color: #7BA7CC !important;
+    color: #3D6A99 !important;
     background: transparent !important;
 }
-hr { border-color: #2E1F26; }
+hr { border-color: #C9A8BB; }
 [data-testid="stCaptionContainer"] p {
-    color: #7A6B72 !important;
+    color: #7A9ABF !important;
     font-family: 'IBM Plex Mono', monospace !important;
     font-size: 0.72rem !important;
 }
-div[data-testid="stDataFrame"] { border: 1px solid #2E1F26; border-radius: 6px; }
+div[data-testid="stDataFrame"] { border: 1px solid #C9A8BB; border-radius: 6px; }
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #1c1618; }
+::-webkit-scrollbar-track { background: #F5E6EE; }
 ::-webkit-scrollbar-thumb { background: #5d6987; border-radius: 3px; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Matplotlib dark theme ─────────────────────────────────────────────────────
 matplotlib.rcParams.update({
-    "figure.facecolor": "#1c1618",
-    "axes.facecolor":   "#231519",
+    "figure.facecolor": "#F5E6EE",
+    "axes.facecolor":   "#EDD3DF",
     "axes.edgecolor":   "#5d6987",
-    "axes.labelcolor":  "#9A8F96",
+    "axes.labelcolor":  "#496D99",
     "xtick.color":      "#6a7a90",
     "ytick.color":      "#6a7a90",
-    "text.color":       "#c8d0e0",
-    "grid.color":       "#2E1F26",
+    "text.color":       "#2D4A6B",
+    "grid.color":       "#E4C5D4",
     "grid.linestyle":   "--",
     "grid.alpha":       0.6,
     "font.family":      "monospace",
@@ -162,17 +162,17 @@ def _label(text: str) -> str:
     """Render a small monospace section label."""
     return (
         f"<div style='font-family:IBM Plex Mono,monospace; font-size:0.68rem; "
-        f"text-transform:uppercase; letter-spacing:0.1em; color:#7A6B72; "
+        f"text-transform:uppercase; letter-spacing:0.1em; color:#7A9ABF; "
         f"margin-bottom:0.6rem;'>{text}</div>"
     )
 
 
 def _card(label: str, value: str, color: str = "#e0e8f0") -> str:
     return f"""
-    <div style="background:#151820; border:1px solid #2E1F26; border-radius:6px;
+    <div style="background:#151820; border:1px solid #C9A8BB; border-radius:6px;
                 padding:0.9rem 1rem; margin-bottom:0.4rem;">
         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
-                    text-transform:uppercase; letter-spacing:0.08em; color:#7A6B72;">
+                    text-transform:uppercase; letter-spacing:0.08em; color:#7A9ABF;">
             {label}
         </div>
         <div style="font-family:'IBM Plex Mono',monospace; font-size:1.25rem;
@@ -184,19 +184,19 @@ def _card(label: str, value: str, color: str = "#e0e8f0") -> str:
 
 
 def _verdict_card(label: str, passed: bool, detail: str) -> str:
-    color  = "#5BAF8A" if passed else "#B05878"
+    color  = "#2D7A4F" if passed else "#9B2335"
     symbol = "✓" if passed else "✗"
     return f"""
-    <div style="background:#231519; border:1px solid #2E1F26;
+    <div style="background:#EDD3DF; border:1px solid #C9A8BB;
                 border-left:3px solid {color}; border-radius:4px;
                 padding:0.9rem 1rem;">
         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
-                    color:#7A6B72; text-transform:uppercase; letter-spacing:0.08em;">
+                    color:#7A9ABF; text-transform:uppercase; letter-spacing:0.08em;">
             {label}
         </div>
         <div style="font-family:'IBM Plex Mono',monospace; font-size:1.2rem;
                     color:{color}; margin-top:0.3rem;">
-            {symbol} <span style="font-size:0.82rem; color:#9A8F96;">{detail}</span>
+            {symbol} <span style="font-size:0.82rem; color:#496D99;">{detail}</span>
         </div>
     </div>
     """
@@ -204,20 +204,20 @@ def _verdict_card(label: str, passed: bool, detail: str) -> str:
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
-<div style="padding:2rem 0 1.5rem 0; border-bottom:1px solid #2E1F26; margin-bottom:2rem;">
+<div style="padding:2rem 0 1.5rem 0; border-bottom:1px solid #C9A8BB; margin-bottom:2rem;">
     <div style="display:flex; align-items:baseline; gap:0.75rem; flex-wrap:wrap;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:1.6rem;
                      font-weight:500; color:#e0e8f0; letter-spacing:-0.02em;">
             Neuricular
         </span>
         <span style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
-                     color:#7BA7CC; letter-spacing:0.12em; text-transform:uppercase;
-                     border:1px solid #3D5A73; padding:2px 8px; border-radius:3px;">
+                     color:#3D6A99; letter-spacing:0.12em; text-transform:uppercase;
+                     border:1px solid #1A3A5C; padding:2px 8px; border-radius:3px;">
             CNS Pipeline
         </span>
     </div>
     <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.85rem;
-                color:#7A6B72; margin-top:0.4rem; font-weight:300; letter-spacing:0.02em;">
+                color:#7A9ABF; margin-top:0.4rem; font-weight:300; letter-spacing:0.02em;">
         Descriptors · CNS MPO · BBB permeability · Clinical toxicity · Reference drug analysis
     </div>
 </div>
@@ -242,8 +242,8 @@ with col_in:
 with col_hint:
     st.markdown(
         "<div style='font-family:IBM Plex Mono,monospace; font-size:0.7rem; "
-        "color:#7A6B72; padding-top:0.65rem;'>"
-        "e.g. Riluzole: <span style='color:#7BA7CC;'>"
+        "color:#7A9ABF; padding-top:0.65rem;'>"
+        "e.g. Riluzole: <span style='color:#3D6A99;'>"
         "C1=CC2=C(C=C1OC(F)(F)F)SC(=N2)N</span></div>",
         unsafe_allow_html=True,
     )
@@ -270,7 +270,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
 ])
 
 EMPTY_MSG = (
-    "<div style='color:#7A6B72; font-family:IBM Plex Mono,monospace; "
+    "<div style='color:#7A9ABF; font-family:IBM Plex Mono,monospace; "
     "font-size:0.85rem; padding:2rem 0;'>Enter a SMILES above to continue.</div>"
 )
 
@@ -334,19 +334,19 @@ with tab1:
             angles_c = angles + angles[:1]
 
             fig, ax = plt.subplots(figsize=(4.2, 4.2), subplot_kw=dict(polar=True))
-            ax.set_facecolor("#1c1618")
-            fig.patch.set_facecolor("#1c1618")
-            ax.plot(angles_c, norms_c, color="#7BA7CC", lw=1.8)
-            ax.fill(angles_c, norms_c, color="#7BA7CC", alpha=0.12)
+            ax.set_facecolor("#F5E6EE")
+            fig.patch.set_facecolor("#F5E6EE")
+            ax.plot(angles_c, norms_c, color="#3D6A99", lw=1.8)
+            ax.fill(angles_c, norms_c, color="#3D6A99", alpha=0.12)
             # Ro5 boundary
             ax.plot(angles_c, [1.0] * len(angles_c),
-                    color="#B05878", lw=0.9, linestyle="--", alpha=0.6, label="Ro5 limit")
+                    color="#9B2335", lw=0.9, linestyle="--", alpha=0.6, label="Ro5 limit")
             ax.set_xticks(angles)
-            ax.set_xticklabels(labels, size=8.5, color="#9A8F96")
+            ax.set_xticklabels(labels, size=8.5, color="#496D99")
             ax.set_yticklabels([])
             ax.set_ylim(0, 1.4)
             ax.spines["polar"].set_color("#5d6987")
-            ax.grid(color="#2E1F26", linewidth=0.7)
+            ax.grid(color="#E4C5D4", linewidth=0.7)
             ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1), fontsize=7)
             plt.tight_layout()
 
@@ -358,7 +358,7 @@ with tab1:
                 <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
                             color:#6a7a90; padding-top:1.8rem; line-height:1.75;">
                 Each axis is normalised to its Lipinski upper limit.<br>
-                The <span style='color:#B05878;'>dashed red boundary</span> represents
+                The <span style='color:#9B2335;'>dashed red boundary</span> represents
                 full Ro5 compliance. Values extending beyond it indicate that property
                 exceeds its Lipinski threshold.
                 </div>
@@ -409,17 +409,17 @@ with tab1:
                 names_p = [f"{d['name']} ({d['category']})" for d in panel]
                 sims_p  = [d["similarity"] for d in panel]
                 bar_c_p = [
-                    "#5BAF8A" if s >= 0.6 else "#C49A3C" if s >= 0.35 else "#7A6B72"
+                    "#2D7A4F" if s >= 0.6 else "#8B6914" if s >= 0.35 else "#7A9ABF"
                     for s in sims_p
                 ]
                 fig, ax = plt.subplots(figsize=(8, 3.8))
                 bars = ax.barh(names_p[::-1], sims_p[::-1], color=bar_c_p[::-1],
                                height=0.55, zorder=2)
-                ax.axvline(0.85, color="#5BAF8A", linestyle="--", lw=0.8, alpha=0.6,
+                ax.axvline(0.85, color="#2D7A4F", linestyle="--", lw=0.8, alpha=0.6,
                            label="≥ 0.85 very high")
-                ax.axvline(0.60, color="#C49A3C", linestyle="--", lw=0.8, alpha=0.6,
+                ax.axvline(0.60, color="#8B6914", linestyle="--", lw=0.8, alpha=0.6,
                            label="≥ 0.60 moderate")
-                ax.axvline(0.35, color="#7A6B72", linestyle="--", lw=0.8, alpha=0.5,
+                ax.axvline(0.35, color="#7A9ABF", linestyle="--", lw=0.8, alpha=0.5,
                            label="< 0.35 low")
                 ax.set_xlim(0, 1.05)
                 ax.set_xlabel("Tanimoto similarity")
@@ -428,7 +428,7 @@ with tab1:
                 ax.legend(fontsize=7, loc="lower right")
                 for bar, s in zip(bars, sims_p[::-1]):
                     ax.text(s + 0.01, bar.get_y() + bar.get_height() / 2,
-                            f"{s:.3f}", va="center", fontsize=8, color="#9A8F96")
+                            f"{s:.3f}", va="center", fontsize=8, color="#496D99")
                 plt.tight_layout()
                 st.pyplot(fig)
 
@@ -520,9 +520,9 @@ with tab2:
 
         if mpo:
             score_color = (
-                "#5BAF8A" if mpo.total >= 4
-                else "#C49A3C" if mpo.total >= 2.5
-                else "#B05878"
+                "#2D7A4F" if mpo.total >= 4
+                else "#8B6914" if mpo.total >= 2.5
+                else "#9B2335"
             )
 
             # Headline score
@@ -530,17 +530,17 @@ with tab2:
             <div style="display:flex; align-items:baseline; gap:1.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
                 <div>
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
-                                text-transform:uppercase; letter-spacing:0.1em; color:#7A6B72;">
+                                text-transform:uppercase; letter-spacing:0.1em; color:#7A9ABF;">
                         CNS MPO Score
                     </div>
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:3rem;
                                 font-weight:500; color:{score_color}; line-height:1.05;">
                         {mpo.total:.2f}
-                        <span style="font-size:1.1rem; color:#7A6B72;"> / 6.00</span>
+                        <span style="font-size:1.1rem; color:#7A9ABF;"> / 6.00</span>
                     </div>
                 </div>
                 <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.92rem;
-                            color:{'#5BAF8A' if mpo.cns_optimised else '#B05878'};
+                            color:{'#2D7A4F' if mpo.cns_optimised else '#9B2335'};
                             align-self:center;">
                     {'✓ CNS-optimised (threshold ≥ 4.0)' if mpo.cns_optimised
                      else '✗ Not CNS-optimised (below threshold of 4.0)'}
@@ -553,9 +553,9 @@ with tab2:
             scores     = list(mpo.per_property.values())
             raws       = list(mpo.raw_values.values())
             bar_colors = [
-                "#5BAF8A" if s == 1.0
-                else "#C49A3C" if s >= 0.5
-                else "#B05878"
+                "#2D7A4F" if s == 1.0
+                else "#8B6914" if s >= 0.5
+                else "#9B2335"
                 for s in scores
             ]
 
@@ -570,7 +570,7 @@ with tab2:
                 ax.text(
                     s + 0.02, bar.get_y() + bar.get_height() / 2,
                     f"{s:.3f}   (raw: {rv})",
-                    va="center", fontsize=8.5, color="#9A8F96",
+                    va="center", fontsize=8.5, color="#496D99",
                 )
             plt.tight_layout()
             st.pyplot(fig)
@@ -578,7 +578,7 @@ with tab2:
             if mpo.failed_properties:
                 st.markdown(
                     f"<div style='font-family:IBM Plex Mono,monospace; font-size:0.78rem; "
-                    f"color:#C49A3C; margin-top:0.4rem;'>"
+                    f"color:#8B6914; margin-top:0.4rem;'>"
                     f"Sub-optimal properties: {', '.join(mpo.failed_properties)}</div>",
                     unsafe_allow_html=True,
                 )
@@ -587,7 +587,7 @@ with tab2:
             st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
             st.markdown(_label("Structural interpretation"), unsafe_allow_html=True)
             expl = explain_cns_mpo(mpo)
-            sev_color = {"good": "#5BAF8A", "moderate": "#C49A3C", "poor": "#B05878"}[expl["severity"]]
+            sev_color = {"good": "#2D7A4F", "moderate": "#8B6914", "poor": "#9B2335"}[expl["severity"]]
             st.markdown(
                 f"<div style='font-family:IBM Plex Sans,sans-serif; font-size:0.9rem; "
                 f"color:{sev_color}; margin-bottom:0.8rem;'>{expl['headline']}</div>",
@@ -599,11 +599,11 @@ with tab2:
             ):
                 for para in expl["paragraphs"]:
                     st.markdown(
-                        f"<div style='background:#231519; border:1px solid #2E1F26; "
+                        f"<div style='background:#EDD3DF; border:1px solid #C9A8BB; "
                         f"border-left:3px solid {sev_color}; border-radius:4px; "
                         f"padding:0.8rem 1rem; margin-bottom:0.5rem; "
                         f"font-family:IBM Plex Sans,sans-serif; font-size:0.83rem; "
-                        f"color:#9A8F96; line-height:1.7;'>{para}</div>",
+                        f"color:#496D99; line-height:1.7;'>{para}</div>",
                         unsafe_allow_html=True,
                     )
             if expl["optimisation"] and expl["optimisation"][0] != (
@@ -653,14 +653,14 @@ with tab3:
                 try:
                     bbb_result = predict_bbbp(smiles, bbbp_model)
                     p = bbb_result.probability
-                    color = "#5BAF8A" if bbb_result.predicted else "#B05878"
+                    color = "#2D7A4F" if bbb_result.predicted else "#9B2335"
                     st.markdown(f"""
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:2.2rem;
                                 font-weight:500; color:{color};">{p:.1%}</div>
                     <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.88rem;
                                 color:{color}; margin-bottom:0.8rem;">
                         {bbb_result.label}
-                        <span style="color:#7A6B72; font-size:0.75rem;">
+                        <span style="color:#7A9ABF; font-size:0.75rem;">
                         &nbsp;· confidence: {bbb_result.confidence}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -672,20 +672,20 @@ with tab3:
                     except Exception:
                         pass
                     bbb_expl = explain_bbbp(bbb_result, mpo_for_expl)
-                    bbb_sev_color = {"good": "#5BAF8A", "moderate": "#C49A3C", "poor": "#B05878"}[bbb_expl["severity"]]
+                    bbb_sev_color = {"good": "#2D7A4F", "moderate": "#8B6914", "poor": "#9B2335"}[bbb_expl["severity"]]
                     st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
                     for line in bbb_expl["body"]:
                         st.markdown(
-                            f"<div style='background:#231519; border:1px solid #2E1F26; "
+                            f"<div style='background:#EDD3DF; border:1px solid #C9A8BB; "
                             f"border-left:3px solid {bbb_sev_color}; border-radius:4px; "
                             f"padding:0.7rem 0.9rem; margin-bottom:0.4rem; "
                             f"font-family:IBM Plex Sans,sans-serif; font-size:0.8rem; "
-                            f"color:#9A8F96; line-height:1.65;'>{line}</div>",
+                            f"color:#496D99; line-height:1.65;'>{line}</div>",
                             unsafe_allow_html=True,
                         )
                     st.markdown(
                         f"<div style='font-family:IBM Plex Mono,monospace; font-size:0.7rem; "
-                        f"color:#7A6B72; margin-top:0.4rem; font-style:italic;'>"
+                        f"color:#7A9ABF; margin-top:0.4rem; font-style:italic;'>"
                         f"⚠ {bbb_expl['caveat']}</div>",
                         unsafe_allow_html=True,
                     )
@@ -700,14 +700,14 @@ with tab3:
                 try:
                     tox_result = predict_clintox(smiles, clintox_model)
                     p = tox_result.probability
-                    color = "#B05878" if tox_result.predicted else "#5BAF8A"
+                    color = "#9B2335" if tox_result.predicted else "#2D7A4F"
                     st.markdown(f"""
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:2.2rem;
                                 font-weight:500; color:{color};">{p:.1%}</div>
                     <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.88rem;
                                 color:{color}; margin-bottom:0.8rem;">
                         {tox_result.label}
-                        <span style="color:#7A6B72; font-size:0.75rem;">
+                        <span style="color:#7A9ABF; font-size:0.75rem;">
                         &nbsp;· confidence: {tox_result.confidence}</span>
                     </div>
                     """, unsafe_allow_html=True)
@@ -719,20 +719,20 @@ with tab3:
                     except Exception:
                         pass
                     tox_expl = explain_clintox(tox_result, mpo_for_tox)
-                    tox_sev_color = {"good": "#5BAF8A", "moderate": "#C49A3C", "poor": "#B05878"}[tox_expl["severity"]]
+                    tox_sev_color = {"good": "#2D7A4F", "moderate": "#8B6914", "poor": "#9B2335"}[tox_expl["severity"]]
                     st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
                     for line in tox_expl["body"]:
                         st.markdown(
-                            f"<div style='background:#231519; border:1px solid #2E1F26; "
+                            f"<div style='background:#EDD3DF; border:1px solid #C9A8BB; "
                             f"border-left:3px solid {tox_sev_color}; border-radius:4px; "
                             f"padding:0.7rem 0.9rem; margin-bottom:0.4rem; "
                             f"font-family:IBM Plex Sans,sans-serif; font-size:0.8rem; "
-                            f"color:#9A8F96; line-height:1.65;'>{line}</div>",
+                            f"color:#496D99; line-height:1.65;'>{line}</div>",
                             unsafe_allow_html=True,
                         )
                     st.markdown(
                         f"<div style='font-family:IBM Plex Mono,monospace; font-size:0.7rem; "
-                        f"color:#7A6B72; margin-top:0.4rem; font-style:italic;'>"
+                        f"color:#7A9ABF; margin-top:0.4rem; font-style:italic;'>"
                         f"⚠ {tox_expl['caveat']}</div>",
                         unsafe_allow_html=True,
                     )
@@ -766,10 +766,10 @@ with tab3:
 
             n_pass = sum([bbb_pass, tox_pass, mpo_pass])
             verdict_map = {
-                3: ("Promising CNS candidate — all three criteria met.", "#5BAF8A"),
-                2: ("Moderate CNS profile — passes 2/3 criteria; consider optimisation.", "#C49A3C"),
+                3: ("Promising CNS candidate — all three criteria met.", "#2D7A4F"),
+                2: ("Moderate CNS profile — passes 2/3 criteria; consider optimisation.", "#8B6914"),
                 1: ("Weak CNS profile — significant structural liabilities present.", "#B07040"),
-                0: ("Poor CNS candidate — fails all three criteria.", "#B05878"),
+                0: ("Poor CNS candidate — fails all three criteria.", "#9B2335"),
             }
             vtext, vcolor = verdict_map[n_pass]
             st.markdown(
@@ -870,13 +870,13 @@ with tab4:
             mpo_vals.append(0.0)
 
     bar_cols = [
-        "#5BAF8A" if v >= 4 else "#C49A3C" if v >= 2.5 else "#B05878"
+        "#2D7A4F" if v >= 4 else "#8B6914" if v >= 2.5 else "#9B2335"
         for v in mpo_vals
     ]
 
     fig, ax = plt.subplots(figsize=(10, 4))
     bars = ax.bar(names_r, mpo_vals, color=bar_cols, width=0.6, zorder=2)
-    ax.axhline(4.0, color="#B05878", linestyle="--", lw=1.2, alpha=0.7,
+    ax.axhline(4.0, color="#9B2335", linestyle="--", lw=1.2, alpha=0.7,
                label="CNS-optimised threshold (≥ 4.0)")
     ax.set_ylabel("CNS MPO Score")
     ax.set_title("CNS MPO — Reference Drug Panel")
@@ -887,7 +887,7 @@ with tab4:
     for bar, v in zip(bars, mpo_vals):
         ax.text(
             bar.get_x() + bar.get_width() / 2, v + 0.08,
-            f"{v:.1f}", ha="center", va="bottom", fontsize=8.5, color="#9A8F96",
+            f"{v:.1f}", ha="center", va="bottom", fontsize=8.5, color="#496D99",
         )
     plt.tight_layout()
     st.pyplot(fig)
@@ -898,7 +898,7 @@ with tab4:
 
     for drug in CNS_REFERENCE_DRUGS:
         if drug["expected_model_agrees"] is False:
-            color = "#C49A3C"
+            color = "#8B6914"
             icon  = "⚠️"
         elif drug["expected_model_agrees"] is None:
             color = "#6a7a90"
@@ -907,7 +907,7 @@ with tab4:
             continue  # only show interesting cases
 
         st.markdown(f"""
-        <div style="background:#231519; border:1px solid #2E1F26;
+        <div style="background:#EDD3DF; border:1px solid #C9A8BB;
                     border-left:3px solid {color}; border-radius:4px;
                     padding:0.9rem 1.1rem; margin-bottom:0.6rem;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
@@ -915,8 +915,8 @@ with tab4:
                 {icon} {drug['name']} — {drug['indication']}
             </div>
             <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
-                        color:#9A8F96; line-height:1.7;">
-                <strong style="color:#c8d0e0;">Mechanism:</strong> {drug['bbb_mechanism']}<br>
+                        color:#496D99; line-height:1.7;">
+                <strong style="color:#2D4A6B;">Mechanism:</strong> {drug['bbb_mechanism']}<br>
                 {drug['discussion_point']}
             </div>
         </div>
@@ -1116,10 +1116,10 @@ with tab2:
             st.markdown(_label("Dynamic property explanations"), unsafe_allow_html=True)
             for prop, explanation in lines:
                 level, text = explanation.split("|", 1)
-                color  = {"good": "#5BAF8A", "warn": "#C49A3C", "bad": "#B05878"}[level]
+                color  = {"good": "#2D7A4F", "warn": "#8B6914", "bad": "#9B2335"}[level]
                 icon   = {"good": "✓", "warn": "⚠", "bad": "✗"}[level]
                 st.markdown(f"""
-                <div style="background:#231519; border:1px solid #2E1F26;
+                <div style="background:#EDD3DF; border:1px solid #C9A8BB;
                             border-left:3px solid {color}; border-radius:4px;
                             padding:0.75rem 1rem; margin-bottom:0.5rem;">
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
@@ -1127,7 +1127,7 @@ with tab2:
                         {icon} {prop}
                     </div>
                     <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
-                                color:#9A8F96; margin-top:0.25rem; line-height:1.65;">
+                                color:#496D99; margin-top:0.25rem; line-height:1.65;">
                         {text}
                     </div>
                 </div>
@@ -1144,9 +1144,9 @@ with tab3:
             if bbbp_model:
                 try:
                     bbb_exp = predict_bbbp(smiles, bbbp_model)
-                    bbb_color = "#5BAF8A" if bbb_exp.predicted else "#B05878"
+                    bbb_color = "#2D7A4F" if bbb_exp.predicted else "#9B2335"
                     st.markdown(f"""
-                    <div style="background:#231519; border:1px solid #2E1F26;
+                    <div style="background:#EDD3DF; border:1px solid #C9A8BB;
                                 border-left:3px solid {bbb_color}; border-radius:4px;
                                 padding:0.85rem 1rem;">
                         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
@@ -1155,7 +1155,7 @@ with tab3:
                             BBB — What this score means
                         </div>
                         <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
-                                    color:#9A8F96; line-height:1.65;">
+                                    color:#496D99; line-height:1.65;">
                             {_explain_bbbp(bbb_exp)}
                         </div>
                     </div>
@@ -1166,9 +1166,9 @@ with tab3:
             if clintox_model:
                 try:
                     tox_exp = predict_clintox(smiles, clintox_model)
-                    tox_color = "#B05878" if tox_exp.predicted else "#5BAF8A"
+                    tox_color = "#9B2335" if tox_exp.predicted else "#2D7A4F"
                     st.markdown(f"""
-                    <div style="background:#231519; border:1px solid #2E1F26;
+                    <div style="background:#EDD3DF; border:1px solid #C9A8BB;
                                 border-left:3px solid {tox_color}; border-radius:4px;
                                 padding:0.85rem 1rem;">
                         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
@@ -1177,7 +1177,7 @@ with tab3:
                             ClinTox — What this score means
                         </div>
                         <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
-                                    color:#9A8F96; line-height:1.65;">
+                                    color:#496D99; line-height:1.65;">
                             {_explain_clintox(tox_exp)}
                         </div>
                     </div>
@@ -1188,7 +1188,7 @@ with tab3:
 
 # ── Footer ────────────────────────────────────────────────────────────────────
 st.markdown("""
-<div style="margin-top:3rem; padding-top:1.2rem; border-top:1px solid #2E1F26;
+<div style="margin-top:3rem; padding-top:1.2rem; border-top:1px solid #C9A8BB;
             font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#5d6987;
             display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
     <span>By Efthalia Arvanitidou</span>
