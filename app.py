@@ -60,7 +60,7 @@ header[data-testid="stHeader"] { background: transparent; }
     background-color: #151820 !important;
     border: 1px solid #5d6987 !important;
     border-radius: 4px !important;
-    color: #e0e8f0 !important;
+    color: #2D4A6B !important;
     font-family: 'IBM Plex Mono', monospace !important;
     font-size: 0.9rem !important;
     padding: 0.6rem 0.9rem !important;
@@ -85,7 +85,7 @@ header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stMetricValue"] {
     font-family: 'IBM Plex Mono', monospace !important;
     font-size: 1.3rem !important;
-    color: #e0e8f0 !important;
+    color: #2D4A6B !important;
 }
 [data-testid="stExpander"] {
     background-color: #EDD3DF;
@@ -167,7 +167,7 @@ def _label(text: str) -> str:
     )
 
 
-def _card(label: str, value: str, color: str = "#e0e8f0") -> str:
+def _card(label: str, value: str, color: str = "#2D4A6B") -> str:
     return f"""
     <div style="background:#151820; border:1px solid #C9A8BB; border-radius:6px;
                 padding:0.9rem 1rem; margin-bottom:0.4rem;">
@@ -207,7 +207,7 @@ st.markdown("""
 <div style="padding:2rem 0 1.5rem 0; border-bottom:1px solid #C9A8BB; margin-bottom:2rem;">
     <div style="display:flex; align-items:baseline; gap:0.75rem; flex-wrap:wrap;">
         <span style="font-family:'IBM Plex Mono',monospace; font-size:1.6rem;
-                     font-weight:500; color:#e0e8f0; letter-spacing:-0.02em;">
+                     font-weight:500; color:#2D4A6B; letter-spacing:-0.02em;">
             Neuricular
         </span>
         <span style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
