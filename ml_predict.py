@@ -14,7 +14,7 @@ import pickle
 import numpy as np
 
 from chem_calc import get_morgan_fp_array
-from exceptions import InvalidSMILESError, ModelLoadError, PredictionError
+from exceptions import ModelLoadError, PredictionError
 from schemas import ModelArtefact, PredictionResult
 
 logger = logging.getLogger(__name__)
@@ -182,8 +182,11 @@ _REFERENCE_ANNOTATIONS = {
         "known_bbb_permeable":   True,
         "expected_model_agrees": True,
         "discussion_point": (
-            "Lipophilic, low-polarity scaffold — passive diffusion is well-captured "
-            "by fingerprint models. Expected true positive."
+            "Correctly predicted as BBB-permeable but with low confidence (P ≈ 0.51). "
+            "Despite its lipophilic scaffold, donepezil's relatively high MW (~380 Da) "
+            "and moderate TPSA place it near the boundary of the model's decision surface. "
+            "The prediction is directionally correct but the narrow margin illustrates "
+            "that even well-established CNS drugs can sit close to the classifier threshold."
         ),
     },
     "Sertraline": {
@@ -191,7 +194,7 @@ _REFERENCE_ANNOTATIONS = {
         "expected_model_agrees": True,
         "discussion_point": (
             "Classic lipophilic amine. Must reach serotonin transporters in the CNS. "
-            "Model should predict high permeability — good positive control."
+            "Model should predict high permeability (good positive control)."
         ),
     },
     "Clozapine": {
@@ -206,14 +209,14 @@ _REFERENCE_ANNOTATIONS = {
         "known_bbb_permeable":   True,
         "expected_model_agrees": False,
         "discussion_point": (
-            "CONFIRMED FAILURE CASE (P = 0.3085, moderate confidence): Levodopa is polar "
+            "CONFIRMED FAILURE CASE (P ≈ 0.36, moderate confidence): Levodopa is polar "
             "and zwitterionic. A fingerprint model predicts low permeability, yet it "
             "crosses the BBB via the LAT1 large amino acid transporter. "
             "Compare with gabapentin: also a LAT1 substrate, but correctly predicted "
             "as permeable because its cyclohexane ring contributes lipophilic bits that "
             "resemble passive diffusion scaffolds. Levodopa has no such compensating "
-            "structural features — the cleanest example in this panel of a "
-            "mechanism-invisible failure."
+            "structural features (the cleanest example in this panel of a "
+            "mechanism-invisible failure.)"
         ),
     },
     "Memantine": {
@@ -238,7 +241,7 @@ _REFERENCE_ANNOTATIONS = {
         "expected_model_agrees": True,
         "discussion_point": (
             "Textbook CNS compound and positive control. Low MW, moderate logP, "
-            "low TPSA — sits comfortably within CNS MPO space."
+            "low TPSA; sits comfortably within CNS MPO space."
         ),
     },
     "Atenolol": {
@@ -247,7 +250,7 @@ _REFERENCE_ANNOTATIONS = {
         "discussion_point": (
             "Deliberately designed NOT to cross the BBB to avoid CNS side effects "
             "(fatigue, depression). High TPSA and HBD count. "
-            "Good true-negative control — model should correctly predict low permeability."
+            "Good true-negative control; model should correctly predict low permeability."
         ),
     },
     "Morphine": {
@@ -255,12 +258,12 @@ _REFERENCE_ANNOTATIONS = {
         "expected_model_agrees": True,
         "discussion_point": (
             "OVERCONFIDENCE CASE (P = 1.0, high confidence): The model predicts morphine "
-            "as BBB-permeable with maximum probability — the highest in the entire panel. "
+            "as BBB-permeable with maximum probability, the highest in the entire panel. "
             "This is technically correct, but the certainty is misleading. Morphine is a "
             "P-glycoprotein (P-gp) efflux substrate, substantially limiting free CNS "
             "exposure relative to more lipophilic opioids like fentanyl. The BBBP dataset "
             "uses a binary label that cannot encode this nuance. P = 1.0 does not mean the "
-            "model understands the pharmacology — it means the opioid scaffold is "
+            "model understands the pharmacology; it means the opioid scaffold is "
             "overrepresented or highly consistent in the training data."
         ),
     },
@@ -272,7 +275,7 @@ _REFERENCE_ANNOTATIONS = {
             "the model correctly predicts BBB permeability (P ≈ 0.93, high confidence). "
             "Likely because its cyclohexane scaffold contributes lipophilic fingerprint "
             "bits resembling passively-permeable compounds in the training set. "
-            "The correct prediction here is for the wrong structural reason — a useful "
+            "The correct prediction here is for the wrong structural reason, a useful "
             "reminder that model accuracy does not imply mechanistic understanding."
         ),
     },

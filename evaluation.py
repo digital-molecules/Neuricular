@@ -5,10 +5,10 @@ evaluation.py - Neuricular's model evaluation and performance analysis module
 Outputs:
     results/
         performance_summary.csv
-        roc_curves.png
-        confusion_matrices.png
-        feature_importances.png
-        dataset_distribution.png
+        roc_curves.svg
+        confusion_matrices.svg
+        feature_importances.svg
+        dataset_distribution.svg
         cns_reference_validation.csv
 """
 
@@ -20,11 +20,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from ml_model import DATASETS, _load_dataset
 from ml_predict import (
-    load_model,
     predict_bbbp,
     CNS_REFERENCE_DRUGS,
+    predict_clintox,
 )
 
 OUTPUT_DIR = "results"
@@ -89,7 +88,7 @@ plt.legend()
 
 plt.tight_layout()
 plt.savefig(
-    f"{OUTPUT_DIR}/roc_curves.png",
+    f"{OUTPUT_DIR}/roc_curves.svg",
     dpi=300
 )
 
@@ -117,7 +116,7 @@ for ax, a in zip(axes, artefacts):
 
 plt.tight_layout()
 plt.savefig(
-    f"{OUTPUT_DIR}/confusion_matrices.png",
+    f"{OUTPUT_DIR}/confusion_matrices.svg",
     dpi=300
 )
 
@@ -152,7 +151,7 @@ for ax, a in zip(axes, artefacts):
 plt.tight_layout()
 
 plt.savefig(
-    f"{OUTPUT_DIR}/feature_importances.png",
+    f"{OUTPUT_DIR}/feature_importances.svg",
     dpi=300
 )
 
@@ -178,56 +177,76 @@ for ax, a in zip(axes, artefacts):
 plt.tight_layout()
 
 plt.savefig(
-    f"{OUTPUT_DIR}/dataset_distribution.png",
+    f"{OUTPUT_DIR}/dataset_distribution.svg",
     dpi=300
 )
 
 plt.close()
 
 # --------------------------------------------------
-# CNS Validation
+# CNS Validation (BBB + Toxicity combined)
 # --------------------------------------------------
 
 print("\n--- CNS DEBUG RUN ---\n")
-rows = []
-for drug in CNS_REFERENCE_DRUGS:
-    try:
-        pred = predict_bbbp(
-            drug["smiles"],
-            bbbp
-        )
 
-        print(drug["name"])
-        print(pred)
+rows = []
+
+for drug in CNS_REFERENCE_DRUGS:
+    name = drug["name"]
+    smiles = drug["smiles"]
+
+    try:
+        # BBB prediction
+        bbb_pred = predict_bbbp(smiles, bbbp)
+
+        # Toxicity prediction (ClinTox model)
+        tox_pred = predict_clintox(smiles, clintox)
+
+        print(name)
+        print("BBB:", bbb_pred)
+        print("TOX:", tox_pred)
         print("OK\n")
 
         rows.append({
-            "Drug": drug["name"],
+            # Identity
+            "Drug": name,
+
+            # BBB ground truth + prediction
             "Known BBB": drug["known_bbb_permeable"],
-            "Predicted BBB": pred.predicted,
-            "Probability": pred.probability,
-            "Confidence": pred.confidence,
+            "Predicted BBB": bbb_pred.predicted,
+            "BBB Probability": bbb_pred.probability,
+            "BBB Confidence": bbb_pred.confidence,
+
+            # Toxicity prediction (NEW)
+            "Predicted Toxicity": tox_pred.predicted,
+            "Toxicity Probability": tox_pred.probability,
+            "Toxicity Confidence": tox_pred.confidence,
+
         })
 
     except Exception as e:
-        print(drug["name"])
+        print(name)
         print(type(e).__name__)
         print(e)
         print("FAILED\n")
 
         rows.append({
-            "Drug": drug["name"],
+            "Drug": name,
+
             "Known BBB": drug["known_bbb_permeable"],
             "Predicted BBB": "ERROR",
-            "Probability": np.nan,
+            "BBB Probability": np.nan,
+            "BBB Confidence": "ERROR",
+
+            "Predicted Toxicity": "ERROR",
+            "Toxicity Probability": np.nan,
+            "Toxicity Confidence": "ERROR",
         })
+
+
 cns_df = pd.DataFrame(rows)
 
 cns_df.to_csv(
     f"{OUTPUT_DIR}/cns_reference_validation.csv",
     index=False
-)
-
-print(
-    f"\nAll outputs saved to '{OUTPUT_DIR}'"
 )

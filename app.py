@@ -1,5 +1,5 @@
 """
-app.py — Neuricular's frontend Streamlit application
+app.py  — Neuricular's frontend Streamlit application
 ======================
 CNS Drug Candidate Screening Pipeline
 
@@ -24,7 +24,6 @@ from rdkit import Chem
 from chem_calc import get_descriptor_profile, get_cns_mpo, get_tanimoto, get_cns_tanimoto_panel
 from ml_predict import load_model, predict_bbbp, predict_clintox, get_top_features, CNS_REFERENCE_DRUGS
 from exceptions import InvalidSMILESError, ModelLoadError, PredictionError
-from schemas import PredictionResult
 from explanations import explain_cns_mpo, explain_bbbp, explain_clintox
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -296,7 +295,7 @@ with tab1:
                 ("MW (Da)",    f"{profile.mw}"),
                 ("logP",       f"{profile.logp}"),
                 ("logD (7.4)", f"{profile.logd}"),
-                ("TPSA (Ų)",  f"{profile.tpsa}"),
+                ("TPSA (Å²)",  f"{profile.tpsa}"),
                 ("HBD",        f"{profile.hbd}"),
                 ("HBA",        f"{profile.hba}"),
                 ("QED",        f"{profile.qed}"),
@@ -380,13 +379,13 @@ with tab1:
                     st.metric("Tanimoto Index (Morgan r=2, 2048 bits)", f"{sim:.4f}")
                     st.progress(float(sim))
                     if sim >= 0.85:
-                        st.success("Very high similarity — likely same or closely related scaffold.")
+                        st.success("Very high similarity, likely same or closely related scaffold.")
                     elif sim >= 0.60:
-                        st.info("Moderate similarity — shared structural features.")
+                        st.info("Moderate similarity, shared structural features.")
                     elif sim >= 0.40:
-                        st.warning("Low similarity — structurally distinct molecules.")
+                        st.warning("Low similarity, structurally distinct molecules.")
                     else:
-                        st.warning("Very low similarity — essentially unrelated structures.")
+                        st.warning("Very low similarity, essentially unrelated structures.")
                 except InvalidSMILESError as e:
                     st.error(str(e))
 
@@ -437,13 +436,13 @@ with tab1:
                 for d in panel:
                     s = d["similarity"]
                     if s >= 0.85:
-                        interp = "Very high — likely same scaffold"
+                        interp = "Very high, likely same scaffold"
                     elif s >= 0.60:
-                        interp = "Moderate — shared structural features"
+                        interp = "Moderate, shared structural features"
                     elif s >= 0.35:
-                        interp = "Low — distant structural relationship"
+                        interp = "Low, distant structural relationship"
                     else:
-                        interp = "Very low — structurally distinct"
+                        interp = "Very low, structurally distinct"
                     rows_p.append({
                         "Drug":        d["name"],
                         "Category":    d["category"],
@@ -465,7 +464,7 @@ with tab1:
                     st.success(
                         f"Very high structural similarity to {top_match['name']} "
                         f"(Tanimoto = {top_match['similarity']:.3f}). "
-                        f"This molecule closely resembles a known {top_match['category'].lower()} — "
+                        f"This molecule closely resembles a known {top_match['category'].lower()}; "
                         f"{top_match['moa']}."
                     )
                 elif top_match["similarity"] >= 0.60:
@@ -484,7 +483,7 @@ with tab1:
             except InvalidSMILESError as e:
                 st.error(str(e))
 
-        with st.expander("Reference — descriptor definitions"):
+        with st.expander("Reference / descriptor definitions"):
             st.markdown("""
             | Descriptor | Definition | Lipinski / Veber threshold |
             |---|---|---|
@@ -563,7 +562,7 @@ with tab2:
             bars = ax.barh(props, scores, color=bar_colors, height=0.52, zorder=2)
             ax.set_xlim(0, 1.28)
             ax.set_xlabel("Contribution (0 → 1)")
-            ax.set_title("CNS MPO — Per-property Contributions")
+            ax.set_title("CNS MPO - Per-property Contributions")
             ax.axvline(1.0, color="#5d6987", linestyle="--", linewidth=0.9)
             ax.grid(axis="x", zorder=0)
             for bar, s, rv in zip(bars, scores, raws):
@@ -594,7 +593,7 @@ with tab2:
                 unsafe_allow_html=True,
             )
             if len(expl["paragraphs"]) > 1 or expl["paragraphs"][0] != (
-                "All six CNS MPO properties are within their ideal ranges — "
+                "All six CNS MPO properties are within their ideal ranges,"
                 "no specific structural liabilities identified at this level of analysis."
             ):
                 for para in expl["paragraphs"]:
@@ -607,13 +606,13 @@ with tab2:
                         unsafe_allow_html=True,
                     )
             if expl["optimisation"] and expl["optimisation"][0] != (
-                "No immediate structural changes suggested — the molecule already meets CNS MPO criteria."
+                "No immediate structural changes suggested, the molecule already meets CNS MPO criteria."
             ):
                 with st.expander("💡 Structural optimisation suggestions"):
                     for sug in expl["optimisation"]:
                         st.markdown(f"- {sug}")
 
-        with st.expander("Reference — CNS MPO desirability functions"):
+        with st.expander("Reference / CNS MPO desirability functions"):
             st.markdown("""
             Each property contributes 0–1 via a piecewise-linear desirability function:
 
@@ -646,7 +645,7 @@ with tab3:
         bbb_result = tox_result = None
 
         with col_bbb:
-            st.markdown(_label("BBB Permeability — BBBP dataset"), unsafe_allow_html=True)
+            st.markdown(_label("BBB Permeability - BBBP dataset"), unsafe_allow_html=True)
             if bbbp_model is None:
                 st.error("BBBP model not available. Run `python ml_model.py` first.")
             else:
@@ -693,7 +692,7 @@ with tab3:
                     st.error(f"Prediction failed: {e}")
 
         with col_tox:
-            st.markdown(_label("Clinical Toxicity — ClinTox dataset"), unsafe_allow_html=True)
+            st.markdown(_label("Clinical Toxicity - ClinTox dataset"), unsafe_allow_html=True)
             if clintox_model is None:
                 st.error("ClinTox model not available. Run `python ml_model.py` first.")
             else:
@@ -766,10 +765,10 @@ with tab3:
 
             n_pass = sum([bbb_pass, tox_pass, mpo_pass])
             verdict_map = {
-                3: ("Promising CNS candidate — all three criteria met.", "#2D7A4F"),
-                2: ("Moderate CNS profile — passes 2/3 criteria; consider optimisation.", "#8B6914"),
-                1: ("Weak CNS profile — significant structural liabilities present.", "#B07040"),
-                0: ("Poor CNS candidate — fails all three criteria.", "#9B2335"),
+                3: ("Promising CNS candidate, all three criteria met.", "#2D7A4F"),
+                2: ("Moderate CNS profile, passes 2/3 criteria; consider optimisation.", "#8B6914"),
+                1: ("Weak CNS profile, significant structural liabilities present.", "#B07040"),
+                0: ("Poor CNS candidate, fails all three criteria.", "#9B2335"),
             }
             vtext, vcolor = verdict_map[n_pass]
             st.markdown(
@@ -778,7 +777,7 @@ with tab3:
                 unsafe_allow_html=True,
             )
 
-        with st.expander("Methodology — how the ML models work"):
+        with st.expander("Methodology (how the ML models work)"):
             st.markdown("""
             Both models follow the same pipeline:
 
@@ -805,7 +804,7 @@ with tab3:
 
 with tab4:
     st.markdown(
-        _label("Curated CNS drug panel — model agreement vs. known pharmacology"),
+        _label("Curated CNS drug panel (model agreement vs. known pharmacology)"),
         unsafe_allow_html=True,
     )
 
@@ -859,7 +858,7 @@ with tab4:
 
     # CNS MPO bar chart for reference panel
     st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-    st.markdown(_label("CNS MPO scores — reference drug panel"), unsafe_allow_html=True)
+    st.markdown(_label("CNS MPO scores / reference drug panel"), unsafe_allow_html=True)
 
     names_r  = [r["Drug"] for r in rows]
     mpo_vals = []
@@ -879,7 +878,7 @@ with tab4:
     ax.axhline(4.0, color="#9B2335", linestyle="--", lw=1.2, alpha=0.7,
                label="CNS-optimised threshold (≥ 4.0)")
     ax.set_ylabel("CNS MPO Score")
-    ax.set_title("CNS MPO — Reference Drug Panel")
+    ax.set_title("CNS MPO - Reference Drug Panel")
     ax.set_ylim(0, 7)
     ax.grid(axis="y", zorder=0)
     ax.legend(fontsize=8)
@@ -912,7 +911,7 @@ with tab4:
                     padding:0.9rem 1.1rem; margin-bottom:0.6rem;">
             <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
                         color:{color}; margin-bottom:0.3rem;">
-                {icon} {drug['name']} — {drug['indication']}
+                {icon} {drug['name']} - {drug['indication']}
             </div>
             <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
                         color:#496D99; line-height:1.7;">
@@ -934,7 +933,7 @@ with tab4:
         It crosses the BBB via the LAT1 large amino acid transporter, yet the model predicts
         low permeability (P ≈ 0.3085) because its polar, zwitterionic catechol-amino acid scaffold
         carries fingerprint bits associated with non-permeable compounds. Gabapentin is also a
-        LAT1 substrate but is correctly predicted as permeable (P ≈ 0.93) — likely because its
+        LAT1 substrate but is correctly predicted as permeable (P ≈ 0.93), likely because its
         cyclohexane ring contributes enough lipophilic bits to superficially resemble a passively
         diffusing molecule. The model gets the right answer for the wrong structural reason.
         Levodopa has no such compensating features, making it the purest example of a
@@ -962,61 +961,61 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     mw = raw["MW"]
     s  = score["MW"]
     if s == 1.0:
-        lines.append(("MW", f"good|MW = {mw} Da — well within the ideal ≤ 360 Da range. Small molecules cross the BBB more readily."))
+        lines.append(("MW", f"good|MW = {mw} Da, well within the ideal ≤ 360 Da range. Small molecules cross the BBB more readily."))
     elif s >= 0.5:
-        lines.append(("MW", f"warn|MW = {mw} Da — above the ideal 360 Da but below the 500 Da hard cutoff. Every extra 10 Da above 360 reduces the contribution linearly."))
+        lines.append(("MW", f"warn|MW = {mw} Da, above the ideal 360 Da but below the 500 Da hard cutoff. Every extra 10 Da above 360 reduces the contribution linearly."))
     else:
-        lines.append(("MW", f"bad|MW = {mw} Da — significantly above 360 Da. Large molecules face steric barriers at the BBB lipid bilayer and are more likely to be effluxed by P-gp."))
+        lines.append(("MW", f"bad|MW = {mw} Da, significantly above 360 Da. Large molecules face steric barriers at the BBB lipid bilayer and are more likely to be effluxed by P-gp."))
 
     # logP
     lp = raw["logP"]
     s  = score["logP"]
     if s == 1.0:
-        lines.append(("logP", f"good|logP = {lp} — optimal lipophilicity (≤ 3). The molecule is lipophilic enough for passive membrane diffusion without excessive tissue binding."))
+        lines.append(("logP", f"good|logP = {lp}, optimal lipophilicity (≤ 3). The molecule is lipophilic enough for passive membrane diffusion without excessive tissue binding."))
     elif s >= 0.5:
-        lines.append(("logP", f"warn|logP = {lp} — moderately high lipophilicity. Values between 3 and 5 correlate with increased plasma protein binding and potential P-gp recognition."))
+        lines.append(("logP", f"warn|logP = {lp}, moderately high lipophilicity. Values between 3 and 5 correlate with increased plasma protein binding and potential P-gp recognition."))
     else:
-        lines.append(("logP", f"bad|logP = {lp} — high lipophilicity. Above 5, molecules tend to aggregate, bind non-specifically to plasma proteins, and are frequently P-gp substrates. High logP is the single strongest predictor of CNS toxicity in the Wager dataset."))
+        lines.append(("logP", f"bad|logP = {lp}, high lipophilicity. Above 5, molecules tend to aggregate, bind non-specifically to plasma proteins, and are frequently P-gp substrates. High logP is the single strongest predictor of CNS toxicity in the Wager dataset."))
 
     # logD
     ld = raw["logD"]
     s  = score["logD"]
     if s == 1.0:
-        lines.append(("logD", f"good|logD (pH 7.4) ≈ {ld} — excellent. At physiological pH, the molecule retains low polarity, favouring passive diffusion across the BBB endothelium."))
+        lines.append(("logD", f"good|logD (pH 7.4) ≈ {ld}, excellent. At physiological pH, the molecule retains low polarity, favouring passive diffusion across the BBB endothelium."))
     elif s >= 0.5:
-        lines.append(("logD", f"warn|logD ≈ {ld} — moderately above the ideal ≤ 2. This may indicate ionisation at physiological pH reduces effective lipophilicity below what logP suggests."))
+        lines.append(("logD", f"warn|logD ≈ {ld}, moderately above the ideal ≤ 2. This may indicate ionisation at physiological pH reduces effective lipophilicity below what logP suggests."))
     else:
-        lines.append(("logD", f"bad|logD ≈ {ld} — high at physiological pH. Note: this is an estimated value based on nitrogen-type heuristics; true logD requires pKa measurement. If the molecule is strongly basic (pKa > 10), its charged form at pH 7.4 will be poorly lipid-soluble."))
+        lines.append(("logD", f"bad|logD ≈ {ld}, high at physiological pH. Note: this is an estimated value based on nitrogen-type heuristics; true logD requires pKa measurement. If the molecule is strongly basic (pKa > 10), its charged form at pH 7.4 will be poorly lipid-soluble."))
 
     # TPSA
     tp = raw["TPSA"]
     s  = score["TPSA"]
     if s == 1.0:
-        lines.append(("TPSA", f"good|TPSA = {tp} Å² — in the optimal 40–90 Å² window. This range balances aqueous solubility (needs some polarity) with membrane permeability (cannot be too polar)."))
+        lines.append(("TPSA", f"good|TPSA = {tp} Å², in the optimal 40–90 Å² window. This range balances aqueous solubility (needs some polarity) with membrane permeability (cannot be too polar)."))
     elif s >= 0.5:
-        lines.append(("TPSA", f"warn|TPSA = {tp} Å² — outside the 40–90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic — good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
+        lines.append(("TPSA", f"warn|TPSA = {tp} Å², outside the 40–90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic — good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
     else:
-        lines.append(("TPSA", f"bad|TPSA = {tp} Å² — {'very low: essentially no polar surface. While permeable, molecules this lipophilic often have high non-specific binding and poor selectivity.' if tp < 20 else 'very high: at this polarity level, passive BBB diffusion becomes negligible. Unless active transport operates, CNS exposure will be minimal. This is the dominant physical-chemical reason most drugs fail CNS penetration.'}"))
+        lines.append(("TPSA", f"bad|TPSA = {tp} Å², {'very low: essentially no polar surface. While permeable, molecules this lipophilic often have high non-specific binding and poor selectivity.' if tp < 20 else 'very high: at this polarity level, passive BBB diffusion becomes negligible. Unless active transport operates, CNS exposure will be minimal. This is the dominant physical-chemical reason most drugs fail CNS penetration.'}"))
 
     # HBD
     hbd = raw["HBD"]
     s   = score["HBD"]
     if s == 1.0:
-        lines.append(("HBD", f"good|HBD = {hbd} — optimal (≤ 1). Each H-bond donor must shed its hydrogen-bond network to cross a lipid membrane; fewer donors means faster desolvation and better BBB penetration."))
+        lines.append(("HBD", f"good|HBD = {hbd}, optimal (≤ 1). Each H-bond donor must shed its hydrogen-bond network to cross a lipid membrane; fewer donors means faster desolvation and better BBB penetration."))
     elif s == 0.5:
-        lines.append(("HBD", f"warn|HBD = 2 — marginally above ideal. Two H-bond donors incur a modest energetic penalty at the membrane interface. Consider whether any -OH or -NH can be protected or replaced with a less polar bioisostere."))
+        lines.append(("HBD", f"warn|HBD = 2, marginally above ideal. Two H-bond donors incur a modest energetic penalty at the membrane interface. Consider whether any -OH or -NH can be protected or replaced with a less polar bioisostere."))
     else:
-        lines.append(("HBD", f"bad|HBD = {hbd} — high. With {hbd} H-bond donors, the desolvation energy cost at the BBB lipid interface is substantial. This is a key structural liability for CNS penetration — medicinal chemists commonly replace -OH groups with fluorine or methoxy groups to reduce HBD count."))
+        lines.append(("HBD", f"bad|HBD = {hbd}, high. With {hbd} H-bond donors, the desolvation energy cost at the BBB lipid interface is substantial. This is a key structural liability for CNS penetration — medicinal chemists commonly replace -OH groups with fluorine or methoxy groups to reduce HBD count."))
 
     # pKa
     pk = raw["pKa"]
     s  = score["pKa"]
     if s == 1.0:
-        lines.append(("pKa", f"good|Estimated pKa ≈ {pk} — ≤ 8, which is optimal. At physiological pH 7.4, a basic pKa ≤ 8 means the molecule is predominantly neutral, favouring passive diffusion. It also reduces hERG channel binding risk (which preferentially binds protonated amines)."))
+        lines.append(("pKa", f"good|Estimated pKa ≈ {pk} (≤ 8), which is optimal. At physiological pH 7.4, a basic pKa ≤ 8 means the molecule is predominantly neutral, favouring passive diffusion. It also reduces hERG channel binding risk (which preferentially binds protonated amines)."))
     elif s >= 0.5:
-        lines.append(("pKa", f"warn|Estimated pKa ≈ {pk} — between 8 and 10. The molecule will carry a partial positive charge at pH 7.4, reducing membrane permeability and increasing the risk of hERG (cardiac) liability."))
+        lines.append(("pKa", f"warn|Estimated pKa ≈ {pk} (between 8 and 10). The molecule will carry a partial positive charge at pH 7.4, reducing membrane permeability and increasing the risk of hERG (cardiac) liability."))
     else:
-        lines.append(("pKa", f"bad|Estimated pKa ≈ {pk} — above 10 (strongly basic). At pH 7.4, a strongly basic amine is predominantly protonated (+ve charge), severely limiting passive membrane diffusion. Strongly basic CNS drugs also have elevated hERG risk. Note: pKa is estimated from nitrogen-type heuristics — verify with Marvin or Epik for accurate values."))
+        lines.append(("pKa", f"bad|Estimated pKa ≈ {pk} (above 10, strongly basic). At pH 7.4, a strongly basic amine is predominantly protonated (+ve charge), severely limiting passive membrane diffusion. Strongly basic CNS drugs also have elevated hERG risk. Note: pKa is estimated from nitrogen-type heuristics, verify with Marvin or Epik for accurate values."))
 
     return lines
 
@@ -1028,7 +1027,7 @@ def _explain_bbbp(result) -> str:
         return (
             f"The model is highly confident this molecule will cross the BBB "
             f"(P = {p:.1%}). Its Morgan fingerprint closely matches the structural "
-            f"patterns of BBB-permeable compounds in the BBBP training set — likely "
+            f"patterns of BBB-permeable compounds in the BBBP training set, likely "
             f"indicating moderate lipophilicity, low TPSA, and few H-bond donors."
         )
     elif p >= 0.65:
@@ -1042,14 +1041,14 @@ def _explain_bbbp(result) -> str:
         return (
             f"The model predicts BBB permeability but with low confidence (P = {p:.1%}, "
             f"just above the 0.5 threshold). This borderline prediction should be treated "
-            f"with caution — small structural changes may flip the prediction. Consider "
+            f"with caution, small structural changes may flip the prediction. Consider "
             f"also reviewing the CNS MPO score and logD value for corroborating evidence."
         )
     elif p >= 0.35:
         return (
             f"The model predicts the molecule is NOT BBB-permeable, with low confidence "
             f"(P = {p:.1%}). The fingerprint has more features associated with non-permeable "
-            f"compounds, but the prediction is uncertain. Check TPSA, HBD, and logD — "
+            f"compounds, but the prediction is uncertain. Check TPSA, HBD, and logD, as"
             f"these are the dominant physical-chemical drivers of BBB exclusion."
         )
     else:
@@ -1081,7 +1080,7 @@ def _explain_clintox(result) -> str:
         )
     elif p <= 0.50:
         return (
-            f"Borderline toxicity signal (P = {p:.1%}). The model is uncertain — the molecule "
+            f"Borderline toxicity signal (P = {p:.1%}). The model is uncertain and "
             f"sits near the decision boundary. This often reflects structural features shared "
             f"between safe and toxic compound classes (e.g. aromatic amines, Michael acceptors). "
             f"In vitro toxicology screening is strongly recommended."
@@ -1152,7 +1151,7 @@ with tab3:
                         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
                                     color:{bbb_color}; text-transform:uppercase; letter-spacing:0.08em;
                                     margin-bottom:0.4rem;">
-                            BBB — What this score means
+                            BBB - What this score means
                         </div>
                         <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
                                     color:#496D99; line-height:1.65;">
@@ -1174,7 +1173,7 @@ with tab3:
                         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.68rem;
                                     color:{tox_color}; text-transform:uppercase; letter-spacing:0.08em;
                                     margin-bottom:0.4rem;">
-                            ClinTox — What this score means
+                            ClinTox - What this score means
                         </div>
                         <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.82rem;
                                     color:#496D99; line-height:1.65;">

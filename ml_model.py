@@ -34,7 +34,7 @@ from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
 
 from exceptions import (
-    DatasetLoadError, InsufficientDataError, ModelTrainingError,
+    DatasetLoadError, InsufficientDataError, ModelTrainingError
 )
 from schemas import DatasetStats, ModelArtefact
 from chem_calc import get_descriptor_profile

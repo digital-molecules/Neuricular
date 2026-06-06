@@ -20,7 +20,7 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors, DataStructs, QED
 from rdkit.Chem import rdFingerprintGenerator
 
-from exceptions import InvalidSMILESError, InsufficientMoleculeError
+from exceptions import InvalidSMILESError
 from schemas import DescriptorProfile, CNSMPOResult
 
 logger = logging.getLogger(__name__)

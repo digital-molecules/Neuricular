@@ -70,7 +70,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CN(C)CCC=C1C2=CC=CC=C2CCC3=CC=CC=C31",
         "category":  "Antidepressant",
         "indication":"Depression, neuropathic pain, migraine prophylaxis",
-        "moa":       "Tricyclic antidepressant — NE/5-HT reuptake inhibitor + anticholinergic",
+        "moa":       "Tricyclic antidepressant; NE/5-HT reuptake inhibitor + anticholinergic",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -86,7 +86,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CN1CCN2C(C1)C3=CC=CC=C3CC4=C2N=CC=C4",
         "category":  "Antidepressant",
         "indication":"Depression, insomnia, appetite stimulation",
-        "moa":       "NaSSA — α2-adrenergic antagonist, 5-HT2/3 antagonist",
+        "moa":       "NaSSA; α2-adrenergic antagonist, 5-HT2/3 antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -104,7 +104,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CN1CCN(CC1)C2=NC3=C(C=CC(=C3)Cl)NC4=CC=CC=C42",
         "category":  "Antipsychotic",
         "indication":"Treatment-resistant schizophrenia",
-        "moa":       "Atypical antipsychotic — D4/5-HT2A antagonist",
+        "moa":       "Atypical antipsychotic; D4/5-HT2A antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -112,7 +112,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC1=C(C(=O)N2CCCCC2=N1)CCN3CCC(CC3)C4=NOC5=C4C=CC(=C5)F",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder",
-        "moa":       "Atypical antipsychotic — D2/5-HT2A antagonist",
+        "moa":       "Atypical antipsychotic; D2/5-HT2A antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -120,7 +120,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC1=CC2=C(S1)NC3=CC=CC=C3N=C2N4CCN(CC4)C",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder",
-        "moa":       "Atypical antipsychotic — multiple receptor antagonism",
+        "moa":       "Atypical antipsychotic; multiple receptor antagonism",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -128,7 +128,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "C1CN(CCN1CCOCCO)C2=NC3=CC=CC=C3SC4=CC=CC=C42",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, bipolar disorder, depression (adjunct)",
-        "moa":       "Atypical antipsychotic — D2/5-HT2 antagonist",
+        "moa":       "Atypical antipsychotic; D2/5-HT2 antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -136,7 +136,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "C1CN(CCC1(C2=CC=C(C=C2)Cl)O)CCCC(=O)C3=CC=C(C=C3)F",
         "category":  "Antipsychotic",
         "indication":"Schizophrenia, Tourette syndrome, acute agitation",
-        "moa":       "Typical antipsychotic — D2 antagonist",
+        "moa":       "Typical antipsychotic; D2 antagonist",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -162,7 +162,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CN1C(=O)CN=C(C2=C1C=CC(=C2)Cl)C3=CC=CC=C3",
         "category":  "Anxiolytic",
         "indication":"Anxiety, muscle spasm, alcohol withdrawal, seizures",
-        "moa":       "Benzodiazepine — GABAA positive allosteric modulator",
+        "moa":       "Benzodiazepine; GABAA positive allosteric modulator",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -170,7 +170,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC1=NN=C2N1C3=C(C=C(C=C3)Cl)C(=NC2)C4=CC=CC=C4",
         "category":  "Anxiolytic",
         "indication":"Panic disorder, anxiety",
-        "moa":       "Benzodiazepine — GABAA PAM",
+        "moa":       "Benzodiazepine; GABAA PAM",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -178,7 +178,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "C1=CC=C(C(=C1)C2=NC(C(=O)NC3=C2C=C(C=C3)Cl)O)Cl",
         "category":  "Anxiolytic",
         "indication":"Anxiety, status epilepticus, procedural sedation",
-        "moa":       "Benzodiazepine — GABAA PAM",
+        "moa":       "Benzodiazepine; GABAA PAM",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -194,7 +194,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC1=CC=C(C=C1)C2=C(N3C=C(C=CC3=N2)C)CC(=O)N(C)C",
         "category":  "Hypnotic",
         "indication":"Insomnia",
-        "moa":       "GABAA PAM — BZ1-selective",
+        "moa":       "GABAA PAM; BZ1-selective",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -202,7 +202,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CCN(C1=CC=CC(=C1)C2=CC=NC3=C(C=NN23)C#N)C(=O)C",
         "category":  "Hypnotic",
         "indication":"Insomnia",
-        "moa":       "GABAA PAM — BZ1-selective",
+        "moa":       "GABAA PAM; BZ1-selective",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -404,7 +404,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CNS(=O)(=O)CC1=CC2=C(C=C1)NC=C2CCN(C)C",
         "category":  "Migraine",
         "indication":"Acute migraine",
-        "moa":       "5-HT1B/1D agonist — triptan",
+        "moa":       "5-HT1B/1D agonist; triptan",
         "bbb_mechanism": "Low CNS penetration (peripheral cranial vasculature action)",
     },
     {
@@ -446,7 +446,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "C[C@@H](CC1=CC=CC=C1)NC(=O)[C@H](CCCCN)N",
         "category":  "ADHD",
         "indication":"ADHD, binge eating disorder",
-        "moa":       "Prodrug of d-amphetamine — DAT/NET releaser",
+        "moa":       "Prodrug of d-amphetamine; DAT/NET releaser",
         "bbb_mechanism": "Hydrolysed to amphetamine; amphetamine crosses by passive diffusion",
     },
 
@@ -489,7 +489,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC1=NC=C2N1C3=C(C=C(C=C3)Cl)C(=NC2)C4=CC=CC=C4F",
         "category":  "Anaesthetic",
         "indication":"Procedural sedation, status epilepticus",
-        "moa":       "Benzodiazepine — GABAA PAM",
+        "moa":       "Benzodiazepine; GABAA PAM",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -597,7 +597,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "C1CC(=O)N(C1)CC(=O)N",
         "category":  "Nootropic",
         "indication":"Cognitive impairment, myoclonus",
-        "moa":       "Racetam — AMPA receptor modulator (exact MOA unclear)",
+        "moa":       "Racetam; AMPA receptor modulator (exact MOA unclear)",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
@@ -606,7 +606,7 @@ CNS_DRUG_DATABASE = [
         "name":      "Riluzole",
         "smiles":    "C1=CC2=C(C=C1OC(F)(F)F)SC(=N2)N",
         "category":  "ALS",
-        "indication":"Amyotrophic lateral sclerosis — extends survival",
+        "indication":"Amyotrophic lateral sclerosis; extends survival",
         "moa":       "Glutamate release inhibitor; Na⁺ channel blocker; NMDA antagonist",
         "bbb_mechanism": "Passive transcellular diffusion (high lipophilicity)",
     },
@@ -614,7 +614,7 @@ CNS_DRUG_DATABASE = [
         "name":      "Edaravone",
         "smiles":    "[2H]C1=C(C(=C(C(=C1[2H])[2H])N2C(=O)CC(=N2)C)[2H])[2H]",
         "category":  "ALS",
-        "indication":"ALS — free radical scavenger (approved in Japan/US)",
+        "indication":"ALS; free radical scavenger (approved in Japan/US)",
         "moa":       "Reactive oxygen species scavenger",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
@@ -624,9 +624,9 @@ CNS_DRUG_DATABASE = [
         "name":      "Risdiplam",
         "smiles":    "CC1=CC(=NN2C1=NC(=C2)C)C3=CC(=O)N4C=C(C=CC4=N3)N5CCNC6(C5)CC6",
         "category":  "SMA",
-        "indication":"Spinal muscular atrophy — oral SMN2 splicing modifier",
-        "moa":       "SMN2 pre-mRNA splicing modifier — increases full-length SMN protein",
-        "bbb_mechanism": "Passive transcellular diffusion — designed for CNS penetration",
+        "indication":"Spinal muscular atrophy; oral SMN2 splicing modifier",
+        "moa":       "SMN2 pre-mRNA splicing modifier; increases full-length SMN protein",
+        "bbb_mechanism": "Passive transcellular diffusion; designed for CNS penetration",
     },
 
     # ── Huntington's Disease ──────────────────────────────────────────────────
@@ -635,7 +635,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CC(C)CC1CN2CCC3=CC(=C(C=C3C2CC1=O)OC)OC",
         "category":  "Huntington's",
         "indication":"Huntington's disease chorea, tardive dyskinesia",
-        "moa":       "VMAT2 inhibitor — depletes presynaptic monoamine stores",
+        "moa":       "VMAT2 inhibitor; depletes presynaptic monoamine stores",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -643,7 +643,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "[2H]C([2H])([2H])OC1=C(C=C2[C@@H]3CC(=O)[C@H](CN3CCC2=C1)CC(C)C)OC([2H])([2H])[2H]",
         "category":  "Huntington's",
         "indication":"Huntington's disease chorea, tardive dyskinesia",
-        "moa":       "VMAT2 inhibitor — deuterated tetrabenazine analogue (improved PK)",
+        "moa":       "VMAT2 inhibitor; deuterated tetrabenazine analogue (improved PK)",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
@@ -653,7 +653,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "COC(=O)/C=C/C(=O)OC",
         "category":  "Multiple sclerosis",
         "indication":"Relapsing-remitting MS",
-        "moa":       "Nrf2 pathway activator — anti-inflammatory, neuroprotective",
+        "moa":       "Nrf2 pathway activator; anti-inflammatory, neuroprotective",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
     {
@@ -661,7 +661,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CCC1=C(C=CC(=C1)/C(=N/OCC2=CC(=C(C=C2)C3CCCCC3)C(F)(F)F)/C)CN4CC(C4)C(=O)O",
         "category":  "Multiple sclerosis",
         "indication":"Secondary progressive MS",
-        "moa":       "S1P1/S1P5 receptor modulator — sequesters lymphocytes in lymph nodes",
+        "moa":       "S1P1/S1P5 receptor modulator; sequesters lymphocytes in lymph nodes",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
@@ -689,7 +689,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CNCCC1=CC=CC=N1",
         "category":  "Vestibular",
         "indication":"Ménière's disease, vertigo",
-        "moa":       "H1 agonist / H3 antagonist — improves labyrinthine blood flow",
+        "moa":       "H1 agonist / H3 antagonist; improves labyrinthine blood flow",
         "bbb_mechanism": "Passive transcellular diffusion",
     },
 
@@ -698,7 +698,7 @@ CNS_DRUG_DATABASE = [
         "name":      "Nimodipine",
         "smiles":    "CC1=C(C(C(=C(N1)C)C(=O)OC(C)C)C2=CC(=CC=C2)[N+](=O)[O-])C(=O)OCCOC",
         "category":  "Cerebrovascular",
-        "indication":"Subarachnoid haemorrhage — prevents vasospasm",
+        "indication":"Subarachnoid haemorrhage; prevents vasospasm",
         "moa":       "L-type Ca²⁺ channel blocker (CNS-selective)",
         "bbb_mechanism": "Passive transcellular diffusion (high lipophilicity)",
     },
@@ -734,7 +734,7 @@ CNS_DRUG_DATABASE = [
         "name":      "Atenolol",
         "smiles":    "CC(C)NCC(COC1=CC=C(C=C1)CC(=O)N)O",
         "category":  "Peripheral control",
-        "indication":"Hypertension (peripheral beta-blocker — low CNS penetration)",
+        "indication":"Hypertension (peripheral beta-blocker; low CNS penetration)",
         "moa":       "β1-adrenergic antagonist",
         "bbb_mechanism": "Excluded by high polarity and P-gp efflux",
     },
@@ -743,7 +743,7 @@ CNS_DRUG_DATABASE = [
         "smiles":    "CN(C)C(=O)OC1=CC=CC(=C1)[N+](C)(C)C",
         "category":  "Peripheral control",
         "indication":"Myasthenia gravis, reversal of NMB (peripheral)",
-        "moa":       "Quaternary AChE inhibitor — does not cross BBB",
-        "bbb_mechanism": "Quaternary ammonium — cannot cross BBB",
+        "moa":       "Quaternary AChE inhibitor; does not cross BBB",
+        "bbb_mechanism": "Quaternary ammonium; cannot cross BBB",
     },
 ]
