@@ -56,7 +56,7 @@ header[data-testid="stHeader"] { background: transparent; }
     border-right: 1px solid #C9A8BB;
 }
 .stTextInput > div > div > input {
-    background-color: #f0e6eb !important;
+    background-color: #fffcfe !important;
     border: 1px solid #5d6987 !important;
     border-radius: 4px !important;
     color: #2D4A6B !important;
@@ -69,7 +69,7 @@ header[data-testid="stHeader"] { background: transparent; }
     box-shadow: 0 0 0 2px rgba(74,158,255,0.15) !important;
 }
 [data-testid="metric-container"] {
-    background-color: #f0e6eb;
+    background-color: #fffcfe;
     border: 1px solid #C9A8BB;
     border-radius: 6px;
     padding: 0.8rem 1rem;
@@ -168,7 +168,7 @@ def _label(text: str) -> str:
 
 def _card(label: str, value: str, color: str = "#2D4A6B") -> str:
     return f"""
-    <div style="background:#f0e6eb; border:1px solid #C9A8BB; border-radius:6px;
+    <div style="background:#fffcfe; border:1px solid #C9A8BB; border-radius:6px;
                 padding:0.9rem 1rem; margin-bottom:0.4rem;">
         <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
                     text-transform:uppercase; letter-spacing:0.08em; color:#7A9ABF;">
@@ -562,7 +562,7 @@ with tab2:
             bars = ax.barh(props, scores, color=bar_colors, height=0.52, zorder=2)
             ax.set_xlim(0, 1.28)
             ax.set_xlabel("Contribution (0 → 1)")
-            ax.set_title("CNS MPO (Per-property Contributions)")
+            ax.set_title("CNS MPO - Per-property Contributions")
             ax.axvline(1.0, color="#5d6987", linestyle="--", linewidth=0.9)
             ax.grid(axis="x", zorder=0)
             for bar, s, rv in zip(bars, scores, raws):
@@ -949,6 +949,8 @@ with tab4:
 
 def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     """
+    Generate per-property plain-English explanations for a CNSMPOResult.
+    Returns list of (property_name, explanation_string) tuples.
     Explanation colour: 'good' | 'warn' | 'bad'
     """
     raw   = mpo.raw_values
@@ -1019,7 +1021,7 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
 
 
 def _explain_bbbp(result) -> str:
-    """Dynamic explanation for a BBBP PredictionResult."""
+    """Generate a dynamic explanation for a BBBP PredictionResult."""
     p = result.probability
     if p >= 0.85:
         return (
@@ -1059,7 +1061,7 @@ def _explain_bbbp(result) -> str:
 
 
 def _explain_clintox(result) -> str:
-    """Dynamic explanation for a ClinTox PredictionResult."""
+    """Generate a dynamic explanation for a ClinTox PredictionResult."""
     p = result.probability
     if p <= 0.15:
         return (
