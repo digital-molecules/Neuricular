@@ -61,16 +61,25 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
     """
     Estimate the most basic pKa via nitrogen-type heuristic.
     Proper pKa requires tools like ChemAxon Marvin or Schrödinger Epik.
-
-    Rules (priority order):
-      Amide N              → excluded (non-basic)
-      Aromatic N           → pKa ≈ 5.0  (pyridine-like)
-      Aliphatic N (2- or 3-valent) → pKa ≈ 10.5
-      No basic N found     → pKa ≈ 4.0  (non-basic molecule)
+ 
+    Rules applied (in priority order):
+ 
+    1. Amide N (C(=O)-N)         → excluded (non-basic, pKa < 0)
+    2. Aromatic N                → pKa ≈ 5.0  (pyridine-like)
+    3. Conjugated non-aromatic N → pKa ≈ 7.5
+       Covers: imidazoline, amidine (C(=N)-N), guanidine (N-C(=N)-N).
+       These are non-aromatic but their lone pair is delocalised into an
+       adjacent C=N bond, lowering basicity well below a true aliphatic amine.
+       Example: tizanidine (imidazoline, experimental pKa ≈ 7.6),
+                metformin (biguanide, pKa ≈ 2.8 / 11.5 — the lower site).
+    4. Aliphatic N (valence 2–3) → pKa ≈ 10.5 (piperidine/morpholine-like)
+    5. No basic N found          → pKa ≈ 4.0  (effectively non-basic)
     """
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() != 7:
             continue
+ 
+        # Rule 1 — exclude amide nitrogens
         is_amide = any(
             nbr.GetAtomicNum() == 6
             and any(
@@ -82,10 +91,36 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
         )
         if is_amide:
             continue
+ 
+        # Rule 2 — aromatic nitrogen
         if atom.GetIsAromatic():
             return 5.0
+ 
+        # Rule 3 — conjugated non-aromatic nitrogen
+        # Detected by: this N has a neighbour carbon that itself bears a
+        # double bond to another nitrogen (C=N pattern adjacent to N).
+        # This captures imidazoline, amidine, and guanidine cores.
+        is_conjugated = False
+        for nbr in atom.GetNeighbors():
+            if nbr.GetAtomicNum() != 6:
+                continue
+            for bond in nbr.GetBonds():
+                other = bond.GetOtherAtom(nbr)
+                if (other.GetIdx() != atom.GetIdx()
+                        and other.GetAtomicNum() == 7
+                        and bond.GetBondTypeAsDouble() == 2.0):
+                    is_conjugated = True
+                    break
+            if is_conjugated:
+                break
+        if is_conjugated:
+            return 7.5
+ 
+        # Rule 4 — aliphatic amine
         if atom.GetTotalValence() in (2, 3):
             return 10.5
+ 
+    # Rule 5 — no basic nitrogen found
     return 4.0
 
 
