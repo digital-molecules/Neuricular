@@ -62,24 +62,27 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
     Estimate the most basic pKa via nitrogen-type heuristic.
     Proper pKa requires tools like ChemAxon Marvin or Schrödinger Epik.
  
-    Rules applied (in priority order):
+    Evaluates ALL nitrogens and returns the highest estimated pKa —
+    i.e. the most basic site — because CNS MPO scores the most basic nitrogen.
  
-    1. Amide N (C(=O)-N)         → excluded (non-basic, pKa < 0)
-    2. Aromatic N                → pKa ≈ 5.0  (pyridine-like)
-    3. Conjugated non-aromatic N → pKa ≈ 7.5
-       Covers: imidazoline, amidine (C(=N)-N), guanidine (N-C(=N)-N).
-       These are non-aromatic but their lone pair is delocalised into an
-       adjacent C=N bond, lowering basicity well below a true aliphatic amine.
-       Example: tizanidine (imidazoline, experimental pKa ≈ 7.6),
-                metformin (biguanide, pKa ≈ 2.8 / 11.5 — the lower site).
-    4. Aliphatic N (valence 2–3) → pKa ≈ 10.5 (piperidine/morpholine-like)
-    5. No basic N found          → pKa ≈ 4.0  (effectively non-basic)
+    Do NOT return early on the first nitrogen found: molecules like tizanidine
+    have both aromatic nitrogens (thiadiazole, pKa ≈ 5) and an imidazoline
+    nitrogen (pKa ≈ 7.5); the imidazoline is the pharmacologically relevant site.
+ 
+    pKa tiers assigned (in ascending order of basicity):
+      Amide N (C(=O)-N)         → excluded (non-basic)
+      Aromatic N                → 5.0  (pyridine-like)
+      Conjugated non-aromatic N → 7.5  (imidazoline, amidine, guanidine)
+      Aliphatic N (valence 2–3) → 10.5 (piperidine, morpholine-like)
+      No basic N found          → 4.0  (effectively non-basic)
     """
+    best_pka = 4.0   # default: no basic nitrogen
+ 
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() != 7:
             continue
  
-        # Rule 1 — exclude amide nitrogens
+        # Exclude amide nitrogens — non-basic due to lone pair delocalisation into C=O
         is_amide = any(
             nbr.GetAtomicNum() == 6
             and any(
@@ -92,14 +95,12 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
         if is_amide:
             continue
  
-        # Rule 2 — aromatic nitrogen
         if atom.GetIsAromatic():
-            return 5.0
+            best_pka = max(best_pka, 5.0)
+            continue
  
-        # Rule 3 — conjugated non-aromatic nitrogen
-        # Detected by: this N has a neighbour carbon that itself bears a
-        # double bond to another nitrogen (C=N pattern adjacent to N).
-        # This captures imidazoline, amidine, and guanidine cores.
+        # Conjugated non-aromatic: N adjacent to a C=N bond
+        # Covers imidazoline, amidine, guanidine cores
         is_conjugated = False
         for nbr in atom.GetNeighbors():
             if nbr.GetAtomicNum() != 6:
@@ -113,15 +114,16 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
                     break
             if is_conjugated:
                 break
+ 
         if is_conjugated:
-            return 7.5
+            best_pka = max(best_pka, 7.5)
+            continue
  
-        # Rule 4 — aliphatic amine
+        # Aliphatic amine
         if atom.GetTotalValence() in (2, 3):
-            return 10.5
+            best_pka = max(best_pka, 10.5)
  
-    # Rule 5 — no basic nitrogen found
-    return 4.0
+    return best_pka
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
