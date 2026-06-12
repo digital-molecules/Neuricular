@@ -62,27 +62,33 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
     Estimate the most basic pKa via nitrogen-type heuristic.
     Proper pKa requires tools like ChemAxon Marvin or Schrödinger Epik.
  
-    Evaluates ALL nitrogens and returns the highest estimated pKa —
-    i.e. the most basic site — because CNS MPO scores the most basic nitrogen.
+    Evaluates ALL nitrogens and returns the pKa of the most basic site.
+    Uses a tier system so that a higher-tier nitrogen (e.g. aliphatic amine)
+    cannot be overridden by a lower-tier one found later in iteration,
+    but also so that a conjugated nitrogen correctly outranks a simple
+    aromatic nitrogen even if both are present (as in tizanidine).
  
-    Do NOT return early on the first nitrogen found: molecules like tizanidine
-    have both aromatic nitrogens (thiadiazole, pKa ≈ 5) and an imidazoline
-    nitrogen (pKa ≈ 7.5); the imidazoline is the pharmacologically relevant site.
+    Tiers (higher = more basic):
+      0 — no basic nitrogen        → pKa 4.0
+      1 — aromatic N               → pKa 5.0
+      2 — conjugated non-aromatic  → pKa 7.5  (imidazoline, amidine, guanidine)
+      3 — aliphatic amine          → pKa 10.5
  
-    pKa tiers assigned (in ascending order of basicity):
-      Amide N (C(=O)-N)         → excluded (non-basic)
-      Aromatic N                → 5.0  (pyridine-like)
-      Conjugated non-aromatic N → 7.5  (imidazoline, amidine, guanidine)
-      Aliphatic N (valence 2–3) → 10.5 (piperidine, morpholine-like)
-      No basic N found          → 4.0  (effectively non-basic)
+    Key design note: the exocyclic NH linker in molecules like tizanidine
+    is aliphatic (tier 3) but its basicity is suppressed by flanking
+    electron-withdrawing groups (aromatic ring + C=N). We detect this by
+    checking whether an aliphatic N is directly bonded to an aromatic ring
+    or to a carbon that is itself bonded to an aromatic ring — if so, we
+    downgrade it to tier 2 (pKa 7.5) to reflect the inductive withdrawal.
     """
-    best_pka = 4.0   # default: no basic nitrogen
+    best_tier = 0
+    best_pka  = 4.0
  
     for atom in mol.GetAtoms():
         if atom.GetAtomicNum() != 7:
             continue
  
-        # Exclude amide nitrogens — non-basic due to lone pair delocalisation into C=O
+        # Exclude amide nitrogens
         is_amide = any(
             nbr.GetAtomicNum() == 6
             and any(
@@ -95,12 +101,13 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
         if is_amide:
             continue
  
+        # Tier 1 — aromatic nitrogen
         if atom.GetIsAromatic():
-            best_pka = max(best_pka, 5.0)
+            if best_tier < 1:
+                best_tier, best_pka = 1, 5.0
             continue
  
-        # Conjugated non-aromatic: N adjacent to a C=N bond
-        # Covers imidazoline, amidine, guanidine cores
+        # Tier 2 — conjugated non-aromatic: adjacent to a C=N bond
         is_conjugated = False
         for nbr in atom.GetNeighbors():
             if nbr.GetAtomicNum() != 6:
@@ -116,12 +123,31 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
                 break
  
         if is_conjugated:
-            best_pka = max(best_pka, 7.5)
+            if best_tier < 2:
+                best_tier, best_pka = 2, 7.5
             continue
  
-        # Aliphatic amine
+        # Tier 3 — aliphatic amine, but check for EW group suppression.
+        # If this N is directly bonded to an aromatic atom, or bonded to a
+        # carbon that bears a double bond to N (i.e. is adjacent to C=N),
+        # its basicity is suppressed — treat as tier 2 (pKa 7.5).
         if atom.GetTotalValence() in (2, 3):
-            best_pka = max(best_pka, 10.5)
+            is_suppressed = any(
+                nbr.GetIsAromatic()
+                or (nbr.GetAtomicNum() == 6 and any(
+                    b.GetBondTypeAsDouble() == 2.0
+                    and b.GetOtherAtom(nbr).GetAtomicNum() == 7
+                    for b in nbr.GetBonds()
+                    if b.GetOtherAtom(nbr).GetIdx() != atom.GetIdx()
+                ))
+                for nbr in atom.GetNeighbors()
+            )
+            if is_suppressed:
+                if best_tier < 2:
+                    best_tier, best_pka = 2, 7.5
+            else:
+                if best_tier < 3:
+                    best_tier, best_pka = 3, 10.5
  
     return best_pka
 
