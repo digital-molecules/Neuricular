@@ -62,24 +62,23 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
     Estimate the most basic pKa via nitrogen-type heuristic.
     Proper pKa requires tools like ChemAxon Marvin or Schrödinger Epik.
  
-    Evaluates ALL nitrogens and returns the pKa of the most basic site.
-    Uses a tier system so that a higher-tier nitrogen (e.g. aliphatic amine)
-    cannot be overridden by a lower-tier one found later in iteration,
-    but also so that a conjugated nitrogen correctly outranks a simple
-    aromatic nitrogen even if both are present (as in tizanidine).
+    Evaluates ALL nitrogens and returns the pKa of the most basic site,
+    using a tier system (higher tier wins):
  
-    Tiers (higher = more basic):
-      0 — no basic nitrogen        → pKa 4.0
-      1 — aromatic N               → pKa 5.0
-      2 — conjugated non-aromatic  → pKa 7.5  (imidazoline, amidine, guanidine)
-      3 — aliphatic amine          → pKa 10.5
+      excluded — amide N or imine N (=N-, the double-bonded partner in C=N)
+      tier 1   — aromatic N                          → pKa 5.0
+      tier 2   — conjugated non-aromatic N            → pKa 7.5
+                 (sp3 N adjacent to C=N, or aliphatic N
+                  suppressed by adjacent aromatic/C=N)
+      tier 3   — aliphatic amine (no EW neighbours)  → pKa 10.5
+      tier 0   — no basic N found                    → pKa 4.0
  
-    Key design note: the exocyclic NH linker in molecules like tizanidine
-    is aliphatic (tier 3) but its basicity is suppressed by flanking
-    electron-withdrawing groups (aromatic ring + C=N). We detect this by
-    checking whether an aliphatic N is directly bonded to an aromatic ring
-    or to a carbon that is itself bonded to an aromatic ring — if so, we
-    downgrade it to tier 2 (pKa 7.5) to reflect the inductive withdrawal.
+    Critical case: tizanidine's imidazoline ring has two nitrogens —
+      N idx=2: the imine =N- (double bond to C). This is NOT basic;
+               it must be excluded, not classified as aliphatic.
+      N idx=4: the sp3 NH, correctly detected as conjugated (tier 2).
+      N idx=5: the exocyclic NH, suppressed by adjacent aromatic C (tier 2).
+    Result: best = 7.5, matching experimental pKa ~7.5-8.2.
     """
     best_tier = 0
     best_pka  = 4.0
@@ -88,7 +87,7 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
         if atom.GetAtomicNum() != 7:
             continue
  
-        # Exclude amide nitrogens
+        # Exclude amide nitrogens (lone pair into C=O)
         is_amide = any(
             nbr.GetAtomicNum() == 6
             and any(
@@ -101,13 +100,24 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
         if is_amide:
             continue
  
+        # Exclude imine nitrogens: N that is itself double-bonded to C (the =N- partner).
+        # These are non-basic (pKa < 5 for imine N) and must not be classified
+        # as aliphatic amines just because they are non-aromatic with valence 3.
+        is_imine = any(
+            bond.GetBondTypeAsDouble() == 2.0
+            and bond.GetOtherAtom(atom).GetAtomicNum() == 6
+            for bond in atom.GetBonds()
+        )
+        if is_imine:
+            continue
+ 
         # Tier 1 — aromatic nitrogen
         if atom.GetIsAromatic():
             if best_tier < 1:
                 best_tier, best_pka = 1, 5.0
             continue
  
-        # Tier 2 — conjugated non-aromatic: adjacent to a C=N bond
+        # Tier 2 — conjugated non-aromatic: sp3/sp2 N adjacent to a C=N bond
         is_conjugated = False
         for nbr in atom.GetNeighbors():
             if nbr.GetAtomicNum() != 6:
@@ -127,10 +137,9 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
                 best_tier, best_pka = 2, 7.5
             continue
  
-        # Tier 3 — aliphatic amine, but check for EW group suppression.
-        # If this N is directly bonded to an aromatic atom, or bonded to a
-        # carbon that bears a double bond to N (i.e. is adjacent to C=N),
-        # its basicity is suppressed — treat as tier 2 (pKa 7.5).
+        # Tier 3 — aliphatic amine, with EW suppression check.
+        # If directly bonded to an aromatic atom, or to a C that has a C=N bond,
+        # basicity is suppressed → treat as tier 2.
         if atom.GetTotalValence() in (2, 3):
             is_suppressed = any(
                 nbr.GetIsAromatic()
@@ -150,7 +159,6 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
                     best_tier, best_pka = 3, 10.5
  
     return best_pka
-
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
