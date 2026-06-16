@@ -7,9 +7,9 @@ Each function receives a typed result object (from schemas.py) and returns
 a structured explanation dict ready for rendering in the Streamlit UI.
 No RDKit, no sklearn — pure logic operating on already-computed values.
 
-Design principle: explanations are *specific*, not generic. They reference
+Design principle: explanations are specific, not generic. They reference
 the actual numerical values and flag the specific properties or confidence
-levels that drove the result, so the user learns something about *this*
+levels that drove the result, so the user learns something about this
 molecule rather than reading boilerplate.
 """
 
@@ -441,14 +441,14 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
  
     # Dataset caveat — always shown for ClinTox due to known imbalance
     body.append(
-        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
+        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100  (1 - p))}% "
         "of training molecules are safe). The model was trained with `class_weight='balanced'` "
         "to compensate, but precision for the toxic class remains limited (F1 ≈ 0.14 on this dataset). "
         "A negative prediction is more reliable than a positive one."
     )
  
     caveat = (
-        "ClinTox labels reflect trial *failure due to toxicity* — not all toxic "
+        "ClinTox labels reflect trial failure due to toxicity — not all toxic "
         "mechanisms are captured. Organ-specific toxicity (hepatotoxicity, nephrotoxicity), "
         "immunogenicity, and long-term chronic effects are not encoded in the fingerprint. "
         "This model is a coarse first filter only."
