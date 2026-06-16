@@ -305,7 +305,10 @@ with tab1:
                 col.metric(label, val)
 
             st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-
+            st.warning(
+            "⚠️ Note: pKa and logD values shown here are rough computational estimates. "
+            "They are derived from rule-based heuristics and RDKit-based structural analysis, "
+            "and should be used for screening only, not as experimentally accurate values.")
             # Rule badges
             c1, c2 = st.columns(2)
             with c1:
