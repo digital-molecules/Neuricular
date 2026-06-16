@@ -142,8 +142,8 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
         tpsa = raw["TPSA"]
         if tpsa > 120:
             paragraphs.append(
-                f"TPSA ({tpsa:.1f} Ų) is very high. TPSA above 90 Ų begins to impede "
-                "passive CNS penetration; above 120 Ų it is strongly predictive of poor "
+                f"TPSA ({tpsa:.1f} Å) is very high. TPSA above 90 Å begins to impede "
+                "passive CNS penetration; above 120 Å it is strongly predictive of poor "
                 "BBB permeability. High TPSA usually reflects multiple polar groups (OH, NH, C=O)."
             )
             optimisation.append(
@@ -152,14 +152,14 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             )
         elif tpsa > 90:
             paragraphs.append(
-                f"TPSA ({tpsa:.1f} Ų) exceeds the ideal CNS window of 40–90 Ų. "
+                f"TPSA ({tpsa:.1f} Å) exceeds the ideal CNS window of 40–90 Å. "
                 "Each additional polar atom above this range incrementally reduces "
                 "passive transcellular permeability."
             )
             optimisation.append("Reducing HBD count is often the most effective way to lower TPSA.")
         elif tpsa < 20:
             paragraphs.append(
-                f"TPSA ({tpsa:.1f} Ų) is very low. While this favours membrane crossing, "
+                f"TPSA ({tpsa:.1f} Å) is very low. While this favours membrane crossing, "
                 "extremely low TPSA can indicate a molecule that is too lipophilic and "
                 "may have poor aqueous solubility or high non-specific binding."
             )
@@ -307,8 +307,8 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
         hbd  = raw["HBD"]
         if not result.predicted and tpsa > 90:
             body.append(
-                f"Supporting structural evidence: TPSA of {tpsa:.1f} Ų is above the "
-                "90 Ų threshold associated with poor passive CNS permeability. "
+                f"Supporting structural evidence: TPSA of {tpsa:.1f} Å is above the "
+                "90 Å threshold associated with poor passive CNS permeability. "
                 "This is consistent with the model's prediction."
             )
         if not result.predicted and hbd >= 3:
@@ -318,7 +318,7 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
             )
         if result.predicted and tpsa <= 60 and hbd <= 1:
             body.append(
-                f"Supporting structural evidence: Low TPSA ({tpsa:.1f} Ų) and "
+                f"Supporting structural evidence: Low TPSA ({tpsa:.1f} Å) and "
                 f"{hbd} H-bond donor(s) are consistent with efficient passive "
                 "transcellular diffusion across the BBB."
             )
@@ -358,7 +358,7 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
 def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
     """
     Generate a molecule-specific explanation for a ClinTox prediction.
-
+ 
     Returns
     -------
     dict with keys:
@@ -369,7 +369,7 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
     """
     p    = result.probability
     conf = result.confidence
-
+ 
     if not result.predicted:
         severity = "good"
         if p <= 0.15:
@@ -397,63 +397,63 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
                 f"Elevated predicted clinical toxicity risk (P(tox) = {p:.1%}). "
                 "The model's prediction is positive but not highly confident."
             )
-
+ 
     body = []
-
+ 
     if conf == "low":
         body.append(
-            f"Low-confidence prediction (P = {p:.1%}). "
+            f"**Low-confidence prediction (P = {p:.1%}).** "
             "The model is near the decision boundary. ClinTox is a small dataset "
             "(~1480 molecules, 12:1 class imbalance towards safe compounds), so "
             "low-confidence predictions should be treated with particular caution."
         )
     elif conf == "moderate":
         body.append(
-            f"Moderate confidence (P = {p:.1%})."
+            f"**Moderate-confidence prediction (P = {p:.1%}).** "
             "Treat as a weak signal; corroborate with structural toxicophore analysis "
             "and in vitro assays (hERG, Ames, cytotoxicity panel)."
         )
     else:
         body.append(
-            f"{'Elevated' if result.predicted else 'Low'} confidence (P = {p:.1%}). "
+            f"**High-confidence prediction (P = {p:.1%}).** "
             "The structural fingerprint pattern "
             f"{'strongly resembles known clinical toxicants' if result.predicted else 'is dissimilar from known clinical toxicants'}."
         )
-
+ 
     # Cross-reference MPO pKa for hERG liability hint
     if mpo_result is not None:
         pka = mpo_result.raw_values["pKa"]
         lp  = mpo_result.raw_values["logP"]
         if pka > 8 and lp > 3 and result.predicted:
             body.append(
-                f"Potential hERG liability: Basic pKa ({pka:.1f}) combined with "
+                f"**Potential hERG liability:** Basic pKa ({pka:.1f}) combined with "
                 f"logP ({lp:.2f}) > 3 is a known risk factor for hERG K⁺ channel block, "
                 "which is the most common mechanistic cause of cardiac toxicity-driven "
                 "clinical trial failure. Experimental hERG patch-clamp assay is advisable."
             )
         if pka > 10 and result.predicted:
             body.append(
-                f"Phospholipidosis risk: Strongly basic amines (pKa ≈ {pka:.1f}) are "
+                f"**Phospholipidosis risk:** Strongly basic amines (pKa ≈ {pka:.1f}) are "
                 "associated with cationic amphiphilic drug-induced phospholipidosis — "
                 "a subcellular toxicity mechanism seen with some antipsychotics and "
                 "antidepressants."
             )
-
+ 
     # Dataset caveat — always shown for ClinTox due to known imbalance
     body.append(
-        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
+        f"**Dataset note:** ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
         "of training molecules are safe). The model was trained with `class_weight='balanced'` "
         "to compensate, but precision for the toxic class remains limited (F1 ≈ 0.14 on this dataset). "
         "A negative prediction is more reliable than a positive one."
     )
-
+ 
     caveat = (
         "ClinTox labels reflect trial *failure due to toxicity* — not all toxic "
         "mechanisms are captured. Organ-specific toxicity (hepatotoxicity, nephrotoxicity), "
         "immunogenicity, and long-term chronic effects are not encoded in the fingerprint. "
         "This model is a coarse first filter only."
     )
-
+ 
     return {
         "headline": headline,
         "body":     body,
