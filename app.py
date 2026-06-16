@@ -299,6 +299,7 @@ with tab1:
                 ("HBD",        f"{profile.hbd}"),
                 ("HBA",        f"{profile.hba}"),
                 ("QED",        f"{profile.qed}"),
+                ("Rotatable Bonds",        f"{profile.rotbond}")
             ]
             for col, (label, val) in zip(cols, metrics):
                 col.metric(label, val)
