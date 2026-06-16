@@ -1,11 +1,11 @@
 """
-explanations.py — Neuricular's dynamic explanation generator for ML predictions and CNS MPO scoring
+explanations.py - Neuricular's dynamic explanation generator for ML predictions and CNS MPO scoring
 ================================
 Dynamic, molecule-specific explanations for ML and scoring results.
 
 Each function receives a typed result object (from schemas.py) and returns
 a structured explanation dict ready for rendering in the Streamlit UI.
-No RDKit, no sklearn — pure logic operating on already-computed values.
+No RDKit, no sklearn - pure logic operating on already-computed values.
 
 Design principle: explanations are specific, not generic. They reference
 the actual numerical values and flag the specific properties or confidence
@@ -26,10 +26,10 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
     Returns
     -------
     dict with keys:
-        headline    : str  — one-sentence summary
-        paragraphs  : list[str] — per-property commentary (only for non-ideal props)
-        optimisation: list[str] — concrete structural suggestions
-        severity    : str  — 'good' | 'moderate' | 'poor'
+        headline    : str  - one-sentence summary
+        paragraphs  : list[str] - per-property commentary (only for non-ideal props)
+        optimisation: list[str] - concrete structural suggestions
+        severity    : str  - 'good' | 'moderate' | 'poor'
     """
     score = result.total
     raw   = result.raw_values
@@ -44,7 +44,7 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
     elif score >= 4.0:
         severity = "good"
         headline = (
-            f"Acceptable CNS profile (MPO {score:.2f}/6) — just above the optimised threshold. "
+            f"Acceptable CNS profile (MPO {score:.2f}/6) - just above the optimised threshold. "
             "Minor structural refinements could push the score higher."
         )
     elif score >= 2.5:
@@ -57,7 +57,7 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
         severity = "poor"
         headline = (
             f"Poor CNS profile (MPO {score:.2f}/6). "
-            "Multiple properties fall outside the CNS-optimised range — significant "
+            "Multiple properties fall outside the CNS-optimised range - significant "
             "structural redesign would be needed for CNS drug development."
         )
 
@@ -91,7 +91,7 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             paragraphs.append(
                 f"logP ({lp:.2f}) is above 5, indicating high lipophilicity. "
                 "While lipophilicity aids membrane permeation, excessive logP correlates with "
-                "poor aqueous solubility, high plasma protein binding, and off-target toxicity."
+                "poor aqueous solubility, high plasma protein binding and off-target toxicity."
             )
             optimisation.append(
                 "Reduce lipophilicity by replacing alkyl chains with heteroatoms, "
@@ -152,7 +152,7 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             )
         elif tpsa > 90:
             paragraphs.append(
-                f"TPSA ({tpsa:.1f} Å) exceeds the ideal CNS window of 40–90 Å. "
+                f"TPSA ({tpsa:.1f} Å) exceeds the ideal CNS window of 40-90 Å. "
                 "Each additional polar atom above this range incrementally reduces "
                 "passive transcellular permeability."
             )
@@ -208,13 +208,13 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
 
     if not paragraphs:
         paragraphs.append(
-            "All six CNS MPO properties are within their ideal ranges — "
+            "All six CNS MPO properties are within their ideal ranges - "
             "no specific structural liabilities identified at this level of analysis."
         )
 
     if not optimisation:
         optimisation.append(
-            "No immediate structural changes suggested — the molecule already meets "
+            "No immediate structural changes suggested - the molecule already meets "
             "CNS MPO criteria."
         )
 
@@ -235,15 +235,15 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
     Parameters
     ----------
     result     : PredictionResult from predict_bbbp()
-    mpo_result : CNSMPOResult (optional) — used to cross-reference structural factors
+    mpo_result : CNSMPOResult (optional) - used to cross-reference structural factors
 
     Returns
     -------
     dict with keys:
         headline   : str
         body       : list[str]
-        caveat     : str  — model limitation note specific to this prediction
-        severity   : str  — 'good' | 'moderate' | 'poor'
+        caveat     : str  - model limitation note specific to this prediction
+        severity   : str  - 'good' | 'moderate' | 'poor'
     """
     p    = result.probability
     conf = result.confidence
@@ -271,7 +271,7 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
             severity = "moderate"
             headline = (
                 f"Weak prediction of BBB impermeability (P(perm) = {p:.1%}). "
-                "The model leans toward non-permeability but the margin is narrow — "
+                "The model leans toward non-permeability but the margin is narrow - "
                 "treat with caution."
             )
 
@@ -323,7 +323,7 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
                 "transcellular diffusion across the BBB."
             )
 
-    # Model limitation caveat — tailored to probability
+    # Model limitation caveat - tailored to probability
     if 0.35 <= p <= 0.65:
         caveat = (
             "Prediction uncertainty is high. This molecule may rely on active transport "
@@ -341,7 +341,7 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
         caveat = (
             "A negative prediction reflects structural features associated with CNS "
             "exclusion in the training data. It does not account for active transport "
-            "mechanisms — compounds like levodopa and gabapentin are falsely predicted "
+            "mechanisms - compounds like levodopa and gabapentin are falsely predicted "
             "as non-permeable by this class of model."
         )
 
@@ -365,7 +365,7 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
         headline  : str
         body      : list[str]
         caveat    : str
-        severity  : str  — 'good' | 'moderate' | 'poor'
+        severity  : str  - 'good' | 'moderate' | 'poor'
     """
     p    = result.probability
     conf = result.confidence
@@ -380,7 +380,7 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
             )
         else:
             headline = (
-                f"Moderate–low predicted clinical toxicity risk (P(tox) = {p:.1%}). "
+                f"Moderate-low predicted clinical toxicity risk (P(tox) = {p:.1%}). "
                 "The model leans toward safety, but the margin is not large."
             )
     else:
@@ -434,12 +434,12 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
         if pka > 10 and result.predicted:
             body.append(
                 f"Phospholipidosis risk: Strongly basic amines (pKa ≈ {pka:.1f}) are "
-                "associated with cationic amphiphilic drug-induced phospholipidosis — "
+                "associated with cationic amphiphilic drug-induced phospholipidosis - "
                 "a subcellular toxicity mechanism seen with some antipsychotics and "
                 "antidepressants."
             )
  
-    # Dataset caveat — always shown for ClinTox due to known imbalance
+    # Dataset caveat - always shown for ClinTox due to known imbalance
     body.append(
         f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
         "of training molecules are safe). The model was trained with `class_weight='balanced'` "
@@ -448,9 +448,9 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
     )
  
     caveat = (
-        "ClinTox labels reflect trial failure due to toxicity — not all toxic "
+        "ClinTox labels reflect trial failure due to toxicity - not all toxic "
         "mechanisms are captured. Organ-specific toxicity (hepatotoxicity, nephrotoxicity), "
-        "immunogenicity, and long-term chronic effects are not encoded in the fingerprint. "
+        "immunogenicity and long-term chronic effects are not encoded in the fingerprint. "
         "This model is a coarse first filter only."
     )
  
