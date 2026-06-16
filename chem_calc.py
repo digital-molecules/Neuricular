@@ -15,7 +15,7 @@ References
 """
 
 import logging
-
+import math
 from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors, DataStructs, QED
 from rdkit.Chem import rdFingerprintGenerator
@@ -40,126 +40,124 @@ def _parse(smiles: str) -> Chem.Mol:
         raise InvalidSMILESError(smiles)
     return mol
 
-
-def _estimate_logd(mol: Chem.Mol, logp: float) -> float:
+def _get_basic_sites(mol):
     """
-    Estimate logD at pH 7.4 using the Mannhold correction for basic amines.
-    logD ≈ logP - 1.0 when a non-aromatic basic nitrogen is present.
-    Limitation: overestimates for polybasic amines; use as screening value only.
+    Returns list of (atom_idx, base_pka, type)
     """
-    basic_n_count = sum(
-        1 for atom in mol.GetAtoms()
-        if atom.GetAtomicNum() == 7
-        and not atom.GetIsAromatic()
-        and atom.GetTotalValence() < 4
-        and atom.GetNoImplicit() is False
-    )
-    return round(logp - (1.0 if basic_n_count > 0 else 0.0), 3)
 
+    patterns = [
+        ("aliphatic_amine", Chem.MolFromSmarts("[NX3;H2,H1,H0][CX4]"), 10.5),
+        ("pyridine", Chem.MolFromSmarts("n1ccccc1"), 5.2),
+        ("imidazole", Chem.MolFromSmarts("n1cnc[nH]1"), 7.5),
+        ("guanidine", Chem.MolFromSmarts("NC(=N)N"), 13.5),
+        ("amidine", Chem.MolFromSmarts("N=C(N)N"), 11.0),
+    ]
+
+    sites = []
+
+    for name, smarts, pka in patterns:
+        if smarts is None:
+            continue
+
+        for match in mol.GetSubstructMatches(smarts):
+            sites.append((match[0], pka, name))
+
+    return sites
+
+def _get_basic_sites(mol):
+    """
+    Returns list of (atom_idx, base_pka, type)
+    """
+
+    patterns = [
+        ("aliphatic_amine", Chem.MolFromSmarts("[NX3;H2,H1,H0][CX4]"), 10.5),
+        ("pyridine", Chem.MolFromSmarts("n1ccccc1"), 5.2),
+        ("imidazole", Chem.MolFromSmarts("n1cnc[nH]1"), 7.5),
+        ("guanidine", Chem.MolFromSmarts("NC(=N)N"), 13.5),
+        ("amidine", Chem.MolFromSmarts("N=C(N)N"), 11.0),
+    ]
+
+    sites = []
+
+    for name, smarts, pka in patterns:
+        if smarts is None:
+            continue
+
+        for match in mol.GetSubstructMatches(smarts):
+            sites.append((match[0], pka, name))
+
+    return sites
+
+def _ionization_profile(mol):
+    """
+    Computes dominant + secondary protonation contributions.
+    Returns sorted list of effective site pKas.
+    """
+
+    sites = _get_basic_sites(mol)
+
+    scored_sites = []
+
+    for atom_idx, base_pka, name in sites:
+        atom = mol.GetAtomWithIdx(atom_idx)
+
+        pka_eff = base_pka - _basicity_penalty(atom)
+
+        # mild physiological smoothing (CNS relevance)
+        score = pka_eff - abs(pka_eff - 7.4) * 0.15
+
+        scored_sites.append((score, pka_eff))
+
+    # sort by relevance
+    scored_sites.sort(reverse=True, key=lambda x: x[0])
+
+    return scored_sites
 
 def _estimate_pka_basic(mol: Chem.Mol) -> float:
     """
-    Estimate the most basic pKa via nitrogen-type heuristic.
-    Proper pKa requires tools like ChemAxon Marvin or Schrödinger Epik.
- 
-    Evaluates ALL nitrogens and returns the pKa of the most basic site,
-    using a tier system (higher tier wins):
- 
-      excluded — amide N or imine N (=N-, the double-bonded partner in C=N)
-      tier 1   — aromatic N                          → pKa 5.0
-      tier 2   — conjugated non-aromatic N            → pKa 7.5
-                 (sp3 N adjacent to C=N, or aliphatic N
-                  suppressed by adjacent aromatic/C=N)
-      tier 3   — aliphatic amine (no EW neighbours)  → pKa 10.5
-      tier 0   — no basic N found                    → pKa 4.0
- 
-    Critical case: tizanidine's imidazoline ring has two nitrogens —
-      N idx=2: the imine =N- (double bond to C). This is NOT basic;
-               it must be excluded, not classified as aliphatic.
-      N idx=4: the sp3 NH, correctly detected as conjugated (tier 2).
-      N idx=5: the exocyclic NH, suppressed by adjacent aromatic C (tier 2).
-    Result: best = 7.5, matching experimental pKa ~7.5-8.2.
+    CNS MPO effective pKa:
+    dominant protonation site with improved micro-environment model
     """
-    best_tier = 0
-    best_pka  = 4.0
- 
-    for atom in mol.GetAtoms():
-        if atom.GetAtomicNum() != 7:
-            continue
- 
-        # Exclude amide nitrogens (lone pair into C=O)
-        is_amide = any(
-            nbr.GetAtomicNum() == 6
-            and any(
-                b.GetBondTypeAsDouble() == 2.0
-                for b in nbr.GetBonds()
-                if b.GetOtherAtom(nbr).GetAtomicNum() == 8
-            )
-            for nbr in atom.GetNeighbors()
-        )
-        if is_amide:
-            continue
- 
-        # Exclude imine nitrogens: N that is itself double-bonded to C (the =N- partner).
-        # These are non-basic (pKa < 5 for imine N) and must not be classified
-        # as aliphatic amines just because they are non-aromatic with valence 3.
-        is_imine = any(
-            bond.GetBondTypeAsDouble() == 2.0
-            and bond.GetOtherAtom(atom).GetAtomicNum() == 6
-            for bond in atom.GetBonds()
-        )
-        if is_imine:
-            continue
- 
-        # Tier 1 — aromatic nitrogen
-        if atom.GetIsAromatic():
-            if best_tier < 1:
-                best_tier, best_pka = 1, 5.0
-            continue
- 
-        # Tier 2 — conjugated non-aromatic: sp3/sp2 N adjacent to a C=N bond
-        is_conjugated = False
-        for nbr in atom.GetNeighbors():
-            if nbr.GetAtomicNum() != 6:
-                continue
-            for bond in nbr.GetBonds():
-                other = bond.GetOtherAtom(nbr)
-                if (other.GetIdx() != atom.GetIdx()
-                        and other.GetAtomicNum() == 7
-                        and bond.GetBondTypeAsDouble() == 2.0):
-                    is_conjugated = True
-                    break
-            if is_conjugated:
-                break
- 
-        if is_conjugated:
-            if best_tier < 2:
-                best_tier, best_pka = 2, 7.5
-            continue
- 
-        # Tier 3 — aliphatic amine, with EW suppression check.
-        # If directly bonded to an aromatic atom, or to a C that has a C=N bond,
-        # basicity is suppressed → treat as tier 2.
-        if atom.GetTotalValence() in (2, 3):
-            is_suppressed = any(
-                nbr.GetIsAromatic()
-                or (nbr.GetAtomicNum() == 6 and any(
-                    b.GetBondTypeAsDouble() == 2.0
-                    and b.GetOtherAtom(nbr).GetAtomicNum() == 7
-                    for b in nbr.GetBonds()
-                    if b.GetOtherAtom(nbr).GetIdx() != atom.GetIdx()
-                ))
-                for nbr in atom.GetNeighbors()
-            )
-            if is_suppressed:
-                if best_tier < 2:
-                    best_tier, best_pka = 2, 7.5
-            else:
-                if best_tier < 3:
-                    best_tier, best_pka = 3, 10.5
- 
-    return best_pka
 
+    profile = _ionization_profile(mol)
+
+    if not profile:
+        return 4.0
+
+    # dominant site (but NOT raw max — environment-weighted max)
+    _, pka = profile[0]
+
+    return round(pka, 2)
+
+def _estimate_logd(mol: Chem.Mol, logp: float) -> float:
+    """
+    Improved CNS-relevant logD model.
+    Uses dominant + secondary ionization effects.
+    """
+
+    profile = _ionization_profile(mol)
+
+    pH = 7.4
+
+    if not profile:
+        return round(logp, 3)
+
+    # dominant site
+    _, pka1 = profile[0]
+    frac1 = 1.0 / (1.0 + 10 ** (pH - pka1))
+
+    # secondary site dampening (important for polyamines)
+    frac2 = 0.0
+    if len(profile) > 1:
+        _, pka2 = profile[1]
+        frac2 = 0.5 * (1.0 / (1.0 + 10 ** (pH - pka2)))
+
+    ionization = frac1 + frac2
+
+    logd = logp - ionization
+
+    return round(logd, 3)
+    
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def get_descriptor_profile(smiles: str) -> DescriptorProfile:
