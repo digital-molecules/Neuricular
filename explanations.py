@@ -441,7 +441,7 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
  
     # Dataset caveat — always shown for ClinTox due to known imbalance
     body.append(
-        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100  (1 - p))}% "
+        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
         "of training molecules are safe). The model was trained with `class_weight='balanced'` "
         "to compensate, but precision for the toxic class remains limited (F1 ≈ 0.14 on this dataset). "
         "A negative prediction is more reliable than a positive one."
