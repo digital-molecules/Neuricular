@@ -290,7 +290,7 @@ with tab1:
 
         if profile:
             # Descriptor metrics
-            cols = st.columns(7)
+            cols = st.columns(8)
             metrics = [
                 ("MW (Da)",    f"{profile.mw}"),
                 ("logP",       f"{profile.logp}"),
