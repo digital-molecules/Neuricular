@@ -64,30 +64,29 @@ def _get_basic_sites(mol):
 
     return sites
 
-def _get_basic_sites(mol):
+def _basicity_penalty(atom):
     """
-    Returns list of (atom_idx, base_pka, type)
+    Smooth electronic penalty model (no hard tiers)
     """
 
-    patterns = [
-        ("aliphatic_amine", Chem.MolFromSmarts("[NX3;H2,H1,H0][CX4]"), 10.5),
-        ("pyridine", Chem.MolFromSmarts("n1ccccc1"), 5.2),
-        ("imidazole", Chem.MolFromSmarts("n1cnc[nH]1"), 7.5),
-        ("guanidine", Chem.MolFromSmarts("NC(=N)N"), 13.5),
-        ("amidine", Chem.MolFromSmarts("N=C(N)N"), 11.0),
-    ]
+    p = 0.0
 
-    sites = []
+    for nbr in atom.GetNeighbors():
 
-    for name, smarts, pka in patterns:
-        if smarts is None:
-            continue
+        if nbr.GetIsAromatic():
+            p += 0.9
 
-        for match in mol.GetSubstructMatches(smarts):
-            sites.append((match[0], pka, name))
+        if nbr.GetAtomicNum() == 6:
+            for b in nbr.GetBonds():
+                o = b.GetOtherAtom(nbr)
+                if o.GetAtomicNum() == 8 and b.GetBondTypeAsDouble() == 2.0:
+                    p += 1.1
 
-    return sites
+        if nbr.GetAtomicNum() in (7, 8, 9):
+            p += 0.25
 
+    return p
+    
 def _ionization_profile(mol):
     """
     Computes dominant + secondary protonation contributions.
