@@ -402,20 +402,20 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
  
     if conf == "low":
         body.append(
-            f"**Low-confidence prediction (P = {p:.1%}).** "
+            f"Low-confidence prediction (P = {p:.1%}). "
             "The model is near the decision boundary. ClinTox is a small dataset "
             "(~1480 molecules, 12:1 class imbalance towards safe compounds), so "
             "low-confidence predictions should be treated with particular caution."
         )
     elif conf == "moderate":
         body.append(
-            f"**Moderate-confidence prediction (P = {p:.1%}).** "
+            f"Moderate-confidence prediction (P = {p:.1%}). "
             "Treat as a weak signal; corroborate with structural toxicophore analysis "
             "and in vitro assays (hERG, Ames, cytotoxicity panel)."
         )
     else:
         body.append(
-            f"**High-confidence prediction (P = {p:.1%}).** "
+            f"High-confidence prediction (P = {p:.1%}). "
             "The structural fingerprint pattern "
             f"{'strongly resembles known clinical toxicants' if result.predicted else 'is dissimilar from known clinical toxicants'}."
         )
@@ -426,14 +426,14 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
         lp  = mpo_result.raw_values["logP"]
         if pka > 8 and lp > 3 and result.predicted:
             body.append(
-                f"**Potential hERG liability:** Basic pKa ({pka:.1f}) combined with "
+                f"Potential hERG liability: Basic pKa ({pka:.1f}) combined with "
                 f"logP ({lp:.2f}) > 3 is a known risk factor for hERG K⁺ channel block, "
                 "which is the most common mechanistic cause of cardiac toxicity-driven "
                 "clinical trial failure. Experimental hERG patch-clamp assay is advisable."
             )
         if pka > 10 and result.predicted:
             body.append(
-                f"**Phospholipidosis risk:** Strongly basic amines (pKa ≈ {pka:.1f}) are "
+                f"Phospholipidosis risk: Strongly basic amines (pKa ≈ {pka:.1f}) are "
                 "associated with cationic amphiphilic drug-induced phospholipidosis — "
                 "a subcellular toxicity mechanism seen with some antipsychotics and "
                 "antidepressants."
@@ -441,7 +441,7 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
  
     # Dataset caveat — always shown for ClinTox due to known imbalance
     body.append(
-        f"**Dataset note:** ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
+        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
         "of training molecules are safe). The model was trained with `class_weight='balanced'` "
         "to compensate, but precision for the toxic class remains limited (F1 ≈ 0.14 on this dataset). "
         "A negative prediction is more reliable than a positive one."
