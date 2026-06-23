@@ -401,7 +401,7 @@ with tab1:
                 "<div style='font-family:IBM Plex Sans,sans-serif; font-size:0.82rem; "
                 "color:#6a7a90; margin-bottom:1rem;'>"
                 "Tanimoto similarity against a curated library of nearly 90 approved CNS drugs "
-                "spanning psychiatry, neurology, pain, anaesthesia, and addiction medicine. "
+                "spanning psychiatry, neurology, pain, anaesthesia and addiction medicine. "
                 "Identifies the most structurally related known CNS compounds.</div>",
                 unsafe_allow_html=True,
             )
@@ -929,7 +929,7 @@ with tab4:
         st.markdown("""
         Benchmarking against molecules with established clinical profiles serves two purposes:
 
-        **1. Sanity-checking the model**: drugs like donepezil, sertraline, and caffeine are
+        **1. Sanity-checking the model**: drugs like donepezil, sertraline and caffeine are
         textbook CNS compounds predicted correctly with high confidence. If the model failed
         these, it would signal a data or training problem.
 
@@ -979,7 +979,7 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     elif s >= 0.5:
         lines.append(("logP", f"warn|logP = {lp}, moderately high lipophilicity. Values between 3 and 5 correlate with increased plasma protein binding and potential P-gp recognition."))
     else:
-        lines.append(("logP", f"bad|logP = {lp}, high lipophilicity. Above 5, molecules tend to aggregate, bind non-specifically to plasma proteins, and are frequently P-gp substrates. High logP is the single strongest predictor of CNS toxicity in the Wager dataset."))
+        lines.append(("logP", f"bad|logP = {lp}, high lipophilicity. Above 5, molecules tend to aggregate, bind non-specifically to plasma proteins and are frequently P-gp substrates. High logP is the single strongest predictor of CNS toxicity in the Wager dataset."))
 
     # logD
     ld = raw["logD"]
@@ -1032,7 +1032,7 @@ def _explain_bbbp(result) -> str:
             f"The model is highly confident this molecule will cross the BBB "
             f"(P = {p:.1%}). Its Morgan fingerprint closely matches the structural "
             f"patterns of BBB-permeable compounds in the BBBP training set, likely "
-            f"indicating moderate lipophilicity, low TPSA, and few H-bond donors."
+            f"indicating moderate lipophilicity, low TPSA and few H-bond donors."
         )
     elif p >= 0.65:
         return (
@@ -1052,7 +1052,7 @@ def _explain_bbbp(result) -> str:
         return (
             f"The model predicts the molecule is NOT BBB-permeable, with low confidence "
             f"(P = {p:.1%}). The fingerprint has more features associated with non-permeable "
-            f"compounds, but the prediction is uncertain. Check TPSA, HBD, and logD, as"
+            f"compounds, but the prediction is uncertain. Check TPSA, HBD and logD, as"
             f"these are the dominant physical-chemical drivers of BBB exclusion."
         )
     else:
@@ -1079,7 +1079,7 @@ def _explain_clintox(result) -> str:
         return (
             f"Moderate-low toxicity signal (P = {p:.1%}). The structural profile is broadly "
             f"consistent with clinically safe compounds, though some fingerprint features "
-            f"overlap with toxic molecules. Review CYP450 liability, hERG binding, and "
+            f"overlap with toxic molecules. Review CYP450 liability, hERG binding and "
             f"reactive metabolite potential as a next step."
         )
     elif p <= 0.50:
@@ -1094,7 +1094,7 @@ def _explain_clintox(result) -> str:
             f"Elevated toxicity signal (P = {p:.1%}). The fingerprint shares significant "
             f"structural features with compounds that failed clinical trials due to toxicity. "
             f"Common structural alerts to check: aromatic amines, nitro groups, Michael acceptors, "
-            f"epoxides, and strongly basic amines (hERG risk)."
+            f"epoxides and strongly basic amines (hERG risk)."
         )
     else:
         return (
