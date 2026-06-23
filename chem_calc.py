@@ -201,7 +201,7 @@ def get_descriptor_profile(smiles: str) -> DescriptorProfile:
 def get_cns_mpo(smiles: str) -> CNSMPOResult:
     """
     Compute the CNS MPO score (Wager et al. 2010) and return a CNSMPOResult.
-    Each property contributes 0–1; score >= 4.0 = CNS-optimised.
+    Each property contributes 0-1; score >= 4.0 = CNS-optimised.
 
     Raises: InvalidSMILESError
     """
@@ -291,7 +291,7 @@ def get_cns_tanimoto_panel(smiles: str, top_n: int = 10) -> list[dict]:
     most similar matches sorted by descending similarity.
 
     Each result dict contains all fields from the database entry plus:
-        similarity : float  — Tanimoto coefficient (0–1)
+        similarity : float  — Tanimoto coefficient (0-1)
 
     Entries with invalid SMILES in the database are silently skipped.
 
