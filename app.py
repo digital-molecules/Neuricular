@@ -497,7 +497,7 @@ with tab1:
             | TPSA | Topological polar surface area (Å²) | ≤ 140 (Veber) |
             | HBD | H-bond donors | ≤ 5 (Lipinski) |
             | HBA | H-bond acceptors | ≤ 10 (Lipinski) |
-            | QED | Quantitative estimate of drug-likeness (0–1) | > 0.5 considered drug-like |
+            | QED | Quantitative estimate of drug-likeness (0-1) | > 0.5 considered drug-like |
             | RotBonds | Rotatable bonds | ≤ 10 (Veber) |
             """)
 
@@ -508,7 +508,7 @@ with tab1:
 
 with tab2:
     st.markdown(
-        _label("Wager et al., ACS Chem. Neurosci. 2010, 1, 435–449"),
+        _label("Wager et al., ACS Chem. Neurosci. 2010, 1, 435-449"),
         unsafe_allow_html=True,
     )
 
@@ -618,16 +618,16 @@ with tab2:
 
         with st.expander("Reference / CNS MPO desirability functions"):
             st.markdown("""
-            Each property contributes 0–1 via a piecewise-linear desirability function:
+            Each property contributes 0-1 via a piecewise-linear desirability function:
 
             | Property | Ideal (score=1) | Penalised zone | Score=0 |
             |---|---|---|---|
-            | MW | ≤ 360 Da | 360–500 | > 500 |
-            | logP | ≤ 3 | 3–5 | > 5 |
-            | logD (pH 7.4) | ≤ 2 | 2–4 | > 4 |
-            | TPSA | 40–90 Å² | 20–40 / 90–120 | < 20 or > 120 |
-            | HBD | 0–1 | 2 (= 0.5) | ≥ 3 |
-            | pKa (most basic) | ≤ 8 | 8–10 | > 10 |
+            | MW | ≤ 360 Da | 360-500 | > 500 |
+            | logP | ≤ 3 | 3-5 | > 5 |
+            | logD (pH 7.4) | ≤ 2 | 2-4 | > 4 |
+            | TPSA | 40-90 Å² | 20-40 / 90-120 | < 20 or > 120 |
+            | HBD | 0-1 | 2 (= 0.5) | ≥ 3 |
+            | pKa (most basic) | ≤ 8 | 8-10 | > 10 |
 
             > Note on pKa and logD: These values are estimated using structural
             > heuristics (nitrogen-type rules), not quantum-mechanical calculations.
@@ -995,9 +995,9 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     tp = raw["TPSA"]
     s  = score["TPSA"]
     if s == 1.0:
-        lines.append(("TPSA", f"good|TPSA = {tp} Å², in the optimal 40–90 Å² window. This range balances aqueous solubility (needs some polarity) with membrane permeability (cannot be too polar)."))
+        lines.append(("TPSA", f"good|TPSA = {tp} Å², in the optimal 40-90 Å² window. This range balances aqueous solubility (needs some polarity) with membrane permeability (cannot be too polar)."))
     elif s >= 0.5:
-        lines.append(("TPSA", f"warn|TPSA = {tp} Å², outside the 40–90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic — good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
+        lines.append(("TPSA", f"warn|TPSA = {tp} Å², outside the 40-90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic — good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
     else:
         lines.append(("TPSA", f"bad|TPSA = {tp} Å², {'very low: essentially no polar surface. While permeable, molecules this lipophilic often have high non-specific binding and poor selectivity.' if tp < 20 else 'very high: at this polarity level, passive BBB diffusion becomes negligible. Unless active transport operates, CNS exposure will be minimal. This is the dominant physical-chemical reason most drugs fail CNS penetration.'}"))
 
