@@ -67,6 +67,9 @@ def _get_basic_sites(mol):
 def _basicity_penalty(atom):
     """
     Smooth electronic penalty model (no hard tiers)
+    
+    Penalty is meant to deprioritize basic sites that are
+    electronically deactivated by their local environment
     """
 
     p = 0.0
@@ -80,7 +83,7 @@ def _basicity_penalty(atom):
             for b in nbr.GetBonds():
                 o = b.GetOtherAtom(nbr)
                 if o.GetAtomicNum() == 8 and b.GetBondTypeAsDouble() == 2.0:
-                    p += 1.1
+                    p += 1.1 # this loop penalizes amides, esters and ketones due to conjugation
 
         if nbr.GetAtomicNum() in (7, 8, 9):
             p += 0.25
@@ -91,6 +94,10 @@ def _ionization_profile(mol):
     """
     Computes dominant + secondary protonation contributions.
     Returns sorted list of effective site pKas.
+
+    The effective pKa is the base pKa minus the local electronic penalty.
+    The score is the effective pKa minus a mild physiological smoothing factor
+    (to prioritize sites that are closer to neutral at pH 7.4).
     """
 
     sites = _get_basic_sites(mol)
@@ -103,7 +110,7 @@ def _ionization_profile(mol):
         pka_eff = base_pka - _basicity_penalty(atom)
 
         # mild physiological smoothing (CNS relevance)
-        score = pka_eff - abs(pka_eff - 7.4) * 0.15
+        score = pka_eff - abs(pka_eff - 7.4) * 0.15 # this factor is tuned to prioritize sites that are closer to neutral at pH 7.4
 
         scored_sites.append((score, pka_eff))
 
@@ -120,10 +127,10 @@ def _estimate_pka_basic(mol: Chem.Mol) -> float:
 
     profile = _ionization_profile(mol)
 
-    if not profile:
+    if not profile: # No basic sites found
         return 4.0
 
-    # dominant site (but NOT raw max — environment-weighted max)
+    # dominant site (but NOT raw max; environment-weighted max)
     _, pka = profile[0]
 
     return round(pka, 2)
@@ -146,11 +153,17 @@ def _estimate_logd(mol: Chem.Mol, logp: float) -> float:
     frac1 = 1.0 / (1.0 + 10 ** (pH - pka1))
 
     # secondary site dampening (important for polyamines)
+    '''
+    The following represents the Henderson-Hasselbalch equation,
+    which describes the relationship between pH, pKa and
+    the ratio of protonated to deprotonated species.
+    The factor of 0.5 is an empirical adjustment to account for
+    the reduced contribution of secondary sites to overall ionization.
+    '''
     frac2 = 0.0
     if len(profile) > 1:
         _, pka2 = profile[1]
         frac2 = 0.5 * (1.0 / (1.0 + 10 ** (pH - pka2)))
-
     ionization = frac1 + frac2
 
     logd = logp - ionization
