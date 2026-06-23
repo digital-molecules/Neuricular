@@ -317,7 +317,7 @@ CNS_DRUG_DATABASE = [
     # ── Alzheimer's / Dementia ────────────────────────────────────────────────
     {
         "name":      "Donepezil",
-        "smiles":    "CCN(CC)C(=O)/C(=C/C1=CC(=C(C(=C1)O)O)[N+](=O)[O-])/C#N",
+        "smiles":    "COC1=C(C=C2C(=C1)CC(C2=O)CC3CCN(CC3)CC4=CC=CC=C4)OC",
         "category":  "Alzheimer's",
         "indication":"Alzheimer's disease",
         "moa":       "Acetylcholinesterase (AChE) inhibitor",
