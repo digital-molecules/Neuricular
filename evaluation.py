@@ -158,6 +158,35 @@ plt.savefig(
 plt.close()
 
 # --------------------------------------------------
+# Feature Importance — Physicochemical Descriptors
+# --------------------------------------------------
+# The feature vector is [2048 Morgan fingerprint bits] + [8 descriptors].
+# Descriptor indices 2048-2055 correspond to:
+DESCRIPTOR_NAMES = ["MW", "logP", "logD", "TPSA", "HBD", "HBA", "RotBonds", "QED"]
+DESCRIPTOR_START = 2048
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+for ax, a in zip(axes, artefacts):
+    desc_importances = a.feature_importances[DESCRIPTOR_START:]
+    bars = ax.barh(DESCRIPTOR_NAMES[::-1], desc_importances[::-1])
+    ax.set_xlabel("Feature importance (Gini)")
+    ax.set_title(f"{a.dataset_name.upper()} — Descriptor Feature Importances")
+    ax.set_xlim(0, max(desc_importances) * 1.25)
+    for bar, val in zip(bars, desc_importances[::-1]):
+        ax.text(
+            val + max(desc_importances) * 0.01,
+            bar.get_y() + bar.get_height() / 2,
+            f"{val:.5f}",
+            va="center", fontsize=8
+        )
+plt.tight_layout()
+plt.savefig(
+    f"{OUTPUT_DIR}/descriptor_importances.svg",
+    dpi=300
+)
+plt.close()
+
+# --------------------------------------------------
 # Dataset Distribution
 # --------------------------------------------------
 
