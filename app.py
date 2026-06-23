@@ -1,13 +1,13 @@
 """
-app.py  — Neuricular's frontend Streamlit application
+app.py  - Neuricular's frontend Streamlit application
 ======================
 CNS Drug Candidate Screening Pipeline
 
 Tabs:
-  1. Descriptors  — standard MW/logP/TPSA/QED panel + radar chart + Tanimoto
-  2. CNS MPO      — Wager 2010 score with per-property breakdown
-  3. ML           — BBB permeability + clinical toxicity predictions + combined verdict
-  4. Reference    — curated CNS drug panel with model agreement analysis
+  1. Descriptors  - standard MW/logP/TPSA/QED panel + radar chart + Tanimoto
+  2. CNS MPO      - Wager 2010 score with per-property breakdown
+  3. ML           - BBB permeability + clinical toxicity predictions + combined verdict
+  4. Reference    - curated CNS drug panel with model agreement analysis
 
 Run:
     streamlit run app.py
@@ -275,7 +275,7 @@ EMPTY_MSG = (
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 1 — DESCRIPTORS
+# TAB 1 - DESCRIPTORS
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab1:
@@ -322,7 +322,7 @@ with tab1:
 
             st.markdown("<hr>", unsafe_allow_html=True)
 
-            # Radar chart — Lipinski space
+            # Radar chart - Lipinski space
             st.markdown(_label("Lipinski Space Radar"), unsafe_allow_html=True)
 
             limits = {"MW": 500, "logP": 5, "HBD": 5, "HBA": 10, "TPSA": 140, "RotBonds": 10}
@@ -503,7 +503,7 @@ with tab1:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 2 — CNS MPO
+# TAB 2 - CNS MPO
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab2:
@@ -636,7 +636,7 @@ with tab2:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 3 — ML PREDICTIONS
+# TAB 3 - ML PREDICTIONS
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab3:
@@ -777,7 +777,7 @@ with tab3:
             vtext, vcolor = verdict_map[n_pass]
             st.markdown(
                 f"<div style='margin-top:1rem; font-family:IBM Plex Sans,sans-serif; "
-                f"font-size:0.9rem; color:{vcolor};'>{n_pass}/3 — {vtext}</div>",
+                f"font-size:0.9rem; color:{vcolor};'>{n_pass}/3 - {vtext}</div>",
                 unsafe_allow_html=True,
             )
 
@@ -803,7 +803,7 @@ with tab3:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TAB 4 — REFERENCE DRUGS
+# TAB 4 - REFERENCE DRUGS
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab4:
@@ -851,10 +851,10 @@ with tab4:
             "Indication":     drug["indication"],
             "Known BBB":      "Yes" if known else "No",
             "BBB mechanism":  drug["bbb_mechanism"],
-            "Predicted BBB":  f"{bbbp_r.probability:.2f}" if bbbp_r else "—",
+            "Predicted BBB":  f"{bbbp_r.probability:.2f}" if bbbp_r else "-",
             "Model agrees":   agrees_str,
-            "Tox P(tox)":     f"{clintox_r.probability:.2f}" if clintox_r else "—",
-            "CNS MPO":        f"{mpo_r.total:.2f}" if mpo_r else "—",
+            "Tox P(tox)":     f"{clintox_r.probability:.2f}" if clintox_r else "-",
+            "CNS MPO":        f"{mpo_r.total:.2f}" if mpo_r else "-",
         })
 
     df_ref = pd.DataFrame(rows)
@@ -997,7 +997,7 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     if s == 1.0:
         lines.append(("TPSA", f"good|TPSA = {tp} Å², in the optimal 40-90 Å² window. This range balances aqueous solubility (needs some polarity) with membrane permeability (cannot be too polar)."))
     elif s >= 0.5:
-        lines.append(("TPSA", f"warn|TPSA = {tp} Å², outside the 40-90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic — good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
+        lines.append(("TPSA", f"warn|TPSA = {tp} Å², outside the 40-90 Å² ideal. {'Below 40 Å²: the molecule is very lipophilic - good permeability but potential solubility and selectivity issues.' if tp < 40 else 'Above 90 Å²: increasing polar surface area reduces passive membrane diffusion. A TPSA > 90 Å² is the most reliable predictor of poor oral CNS bioavailability in the Veber dataset.'}"))
     else:
         lines.append(("TPSA", f"bad|TPSA = {tp} Å², {'very low: essentially no polar surface. While permeable, molecules this lipophilic often have high non-specific binding and poor selectivity.' if tp < 20 else 'very high: at this polarity level, passive BBB diffusion becomes negligible. Unless active transport operates, CNS exposure will be minimal. This is the dominant physical-chemical reason most drugs fail CNS penetration.'}"))
 
@@ -1009,7 +1009,7 @@ def _explain_cns_mpo(mpo) -> list[tuple[str, str]]:
     elif s == 0.5:
         lines.append(("HBD", f"warn|HBD = 2, marginally above ideal. Two H-bond donors incur a modest energetic penalty at the membrane interface. Consider whether any -OH or -NH can be protected or replaced with a less polar bioisostere."))
     else:
-        lines.append(("HBD", f"bad|HBD = {hbd}, high. With {hbd} H-bond donors, the desolvation energy cost at the BBB lipid interface is substantial. This is a key structural liability for CNS penetration — medicinal chemists commonly replace -OH groups with fluorine or methoxy groups to reduce HBD count."))
+        lines.append(("HBD", f"bad|HBD = {hbd}, high. With {hbd} H-bond donors, the desolvation energy cost at the BBB lipid interface is substantial. This is a key structural liability for CNS penetration - medicinal chemists commonly replace -OH groups with fluorine or methoxy groups to reduce HBD count."))
 
     # pKa
     pk = raw["pKa"]
@@ -1106,7 +1106,7 @@ def _explain_clintox(result) -> str:
         )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# DYNAMIC EXPLANATIONS — injected into existing tabs via session state
+# DYNAMIC EXPLANATIONS - injected into existing tabs via session state
 # Displayed as expanders at the bottom of Tab 2 (CNS MPO) and Tab 3 (ML)
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -1136,7 +1136,7 @@ with tab2:
                 </div>
                 """, unsafe_allow_html=True)
         except (InvalidSMILESError, Exception):
-            pass   # silently skip — errors already shown in main tab2 block
+            pass   # silently skip - errors already shown in main tab2 block
 
 with tab3:
     if smiles and (bbbp_model or clintox_model):
