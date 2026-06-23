@@ -170,12 +170,12 @@ for ax, a in zip(axes, artefacts):
     desc_importances = a.feature_importances[DESCRIPTOR_START:]
     bars = ax.barh(DESCRIPTOR_NAMES[::-1], desc_importances[::-1])
     ax.set_xlabel("Feature importance (Gini)")
-    ax.set_title(f"{a.dataset_name.upper()} — Descriptor Feature Importances")
-    ax.set_xlim(0, max(desc_importances) * 1.25)
-    for bar, val in zip(bars, desc_importances[::-1]):
+    ax.set_title(f"{a.dataset_name.upper()} - Descriptor Feature Importances")
+    ax.set_xlim(0, max(desc_importances) * 1.25) # Add some padding to the right for text labels
+    for bar, val in zip(bars, desc_importances[::-1]): # Iterate in reverse to match the order of the bars
         ax.text(
-            val + max(desc_importances) * 0.01,
-            bar.get_y() + bar.get_height() / 2,
+            val + max(desc_importances) * 0.01, # Add a small offset to the right of the bar
+            bar.get_y() + bar.get_height() / 2, # Center the text vertically on the bar
             f"{val:.5f}",
             va="center", fontsize=8
         )
