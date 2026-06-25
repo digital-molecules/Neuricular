@@ -612,7 +612,7 @@ CNS_DRUG_DATABASE = [
     },
     {
         "name":      "Edaravone",
-        "smiles":    "[2H]C1=C(C(=C(C(=C1[2H])[2H])N2C(=O)CC(=N2)C)[2H])[2H]",
+        "smiles":    "CC1=NN(C(=O)C1)C2=CC=CC=C2",
         "category":  "ALS",
         "indication":"ALS; free radical scavenger (approved in Japan/US)",
         "moa":       "Reactive oxygen species scavenger",
