@@ -16,6 +16,8 @@ References
 
 import logging
 import math
+import urllib.parse
+import requests
 from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors, DataStructs, QED
 from rdkit.Chem import rdFingerprintGenerator
@@ -323,3 +325,39 @@ def get_cns_tanimoto_panel(smiles: str, top_n: int = 10) -> list[dict]:
 
     results.sort(key=lambda x: x["similarity"], reverse=True)
     return results[:top_n]
+
+def resolve_smiles(user_input: str) -> tuple[str, str]:
+
+    stripped = user_input.strip()
+
+    # Try as SMILES first
+    mol = Chem.MolFromSmiles(stripped)
+    if mol is not None:
+        return stripped, "smiles"
+
+    encoded = urllib.parse.quote(stripped)
+
+    # Use PubChem's fast structure lookup endpoint
+    # This hits a different CDN than the main PUG REST API
+    url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{encoded}/property/IsomericSMILES/TXT"
+
+    try:
+        resp = requests.get(
+            url,
+            timeout=15,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "text/plain",
+            }
+        )
+        if resp.status_code == 200:
+            smiles = resp.text.strip().split("\n")[0]
+            if smiles:
+                return smiles, "pubchem"
+        raise ValueError(f"HTTP {resp.status_code}: {resp.text[:200]}")
+    except Exception as exc:
+        logger.warning("PubChem lookup failed for '%s': %s", stripped, exc)
+        raise InvalidSMILESError(
+            f"'{stripped}' could not be resolved. "
+            "Try pasting the SMILES directly — find it at pubchem.ncbi.nlm.nih.gov."
+        )
