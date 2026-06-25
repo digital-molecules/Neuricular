@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from rdkit import Chem
 
-from chem_calc import get_descriptor_profile, get_cns_mpo, get_tanimoto, get_cns_tanimoto_panel
+from chem_calc import get_descriptor_profile, get_cns_mpo, get_tanimoto, get_cns_tanimoto_panel, resolve_smiles
 from ml_predict import load_model, predict_bbbp, predict_clintox, get_top_features, CNS_REFERENCE_DRUGS
 from exceptions import InvalidSMILESError, ModelLoadError, PredictionError
 from explanations import explain_cns_mpo, explain_bbbp, explain_clintox
@@ -238,25 +238,31 @@ with col_in:
         placeholder="Paste a SMILES string here…",
         label_visibility="collapsed",
     )
+
 with col_hint:
     st.markdown(
         "<div style='font-family:IBM Plex Mono,monospace; font-size:0.7rem; "
         "color:#7A9ABF; padding-top:0.65rem;'>"
-        "e.g. Riluzole: <span style='color:#3D6A99;'>"
-        "C1=CC2=C(C=C1OC(F)(F)F)SC(=N2)N</span></div>",
+        "Enter a SMILES <em>or</em> a generic name (e.g. "
+        "<span style='color:#3D6A99;'>edaravone</span> or "
+        "<span style='color:#3D6A99;'>CC1=NN(C(=O)C1)C2=CC=CC=C2</span>)"
+        "</div>",
         unsafe_allow_html=True,
     )
 
-# Validate SMILES once; pass None downstream if invalid
 smiles = None
+source = None
 if raw_smiles:
-    if Chem.MolFromSmiles(raw_smiles.strip()) is None:
+    try:
+        smiles, source = resolve_smiles(raw_smiles)
+    except InvalidSMILESError:
         st.error(
-            f"Invalid SMILES: `{raw_smiles}` could not be parsed. "
-            "Please check for typos or use a SMILES validator."
+            f"**Could not resolve** `{raw_smiles}`. "
+            "Enter a valid SMILES string or a recognised drug name (looked up via PubChem)."
         )
-    else:
-        smiles = raw_smiles.strip()
+
+if smiles and source == "pubchem":
+    st.caption(f"Resolved via PubChem → `{smiles}`")
 
 st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
 
