@@ -48,9 +48,54 @@ def _get_basic_sites(mol):
     """
 
     patterns = [
-        ("aliphatic_amine", Chem.MolFromSmarts("[NX3;H2,H1,H0][CX4]"), 10.5),
+        # Aliphatic amine: N bonded to an sp3 (CX4) carbon. Explicitly
+        # excludes nitrogens whose lone pair is delocalized elsewhere and so
+        # are not meaningfully basic: amides/carbamates/ureas (N-C(=O)),
+        # thioamides (N-C(=S)), sulfonamides (N-S(=O)(=O)), and nitrogens
+        # bonded to an aromatic ring (handled separately below as
+        # 'aniline', which has much lower basicity due to ring conjugation).
+        # Without these exclusions this pattern also matched amide and
+        # aniline nitrogens with the full 10.5 aliphatic-amine baseline,
+        # e.g. estimating N-methylacetamide's non-basic amide N at pKa≈9.4
+        # (real value ≈ -1 to 0) and N-methylaniline's N at pKa≈9.6 (real
+        # value ≈ 4.6-4.9) — both are common substructures in drug-like
+        # molecules, so this was a significant systematic error.
+        ("aliphatic_amine",
+         Chem.MolFromSmarts(
+             "[NX3;H2,H1,H0;!$(N-C(=O));!$(N-C(=S));!$(N-S(=O)(=O));!$(N-a)][CX4]"
+         ), 10.5),
+        # Aniline-type: N bonded directly to an aromatic ring (and not an
+        # amide/sulfonamide). Conjugation with the ring delocalizes the
+        # lone pair, dropping basicity well below a plain aliphatic amine
+        # (aniline itself: pKaH ≈ 4.6, vs. ~10.5-10.8 for a trialkylamine).
+        ("aniline",
+         Chem.MolFromSmarts(
+             "[NX3;H2,H1,H0;!$(N-C(=O));!$(N-C(=S));!$(N-S(=O)(=O))]-a"
+         ), 4.6),
         ("pyridine", Chem.MolFromSmarts("n1ccccc1"), 5.2),
-        ("imidazole", Chem.MolFromSmarts("n1cnc[nH]1"), 7.5),
+        # Imidazole: the pyridine-type ring nitrogen (2 ring bonds, lone
+        # pair not in the aromatic system — [nX2]) is the basic site; the
+        # pyrrole-type nitrogen ([nX3], H or alkyl-substituted) donates its
+        # lone pair into the ring and isn't basic. The previous pattern
+        # "n1cnc[nH]1" described a 5-ring with 3 nitrogens and 2 carbons —
+        # not imidazole's actual 2N/3C ring — so it never matched a real
+        # imidazole at all (confirmed: plain imidazole and several
+        # substituted variants all failed to match it). [nX2]/[nX3] here
+        # also matches N-alkylated imidazoles, not just the N-H tautomer.
+        # Known limitation: this pattern also matches the imidazole-type
+        # nitrogen in fused bicyclic systems like purines/xanthines (e.g.
+        # caffeine, theophylline). There, cross-ring conjugation with
+        # carbonyls on the *fused* ring (two bonds away via the ring-fusion
+        # carbon, not a direct neighbor) substantially reduces basicity in
+        # reality, but _basicity_penalty only inspects direct neighbors and
+        # can't see that. Confirmed: caffeine's pKa_basic estimate moves
+        # from 4.0 (undetected, old broken pattern) to 7.5 (detected, but
+        # too high — real caffeine pKaH ≈ 0.6, essentially non-basic).
+        # Not fixed here — properly excluding fused-ring imide systems
+        # needs testing against a broader purine/xanthine set
+        # (theophylline, theobromine, adenine, guanine, xanthine,
+        # allopurinol, ...) before trusting it.
+        ("imidazole", Chem.MolFromSmarts("[nX2]1cc[nX3]c1"), 7.5),
         ("guanidine", Chem.MolFromSmarts("NC(=N)N"), 13.5),
         ("amidine", Chem.MolFromSmarts("N=C(N)N"), 11.0),
     ]
@@ -64,21 +109,52 @@ def _get_basic_sites(mol):
         for match in mol.GetSubstructMatches(smarts):
             sites.append((match[0], pka, name))
 
-    return sites
+    # Deduplicate by atom index. A single nitrogen can produce multiple
+    # substructure matches for the *same* pattern — e.g. a triethylamino
+    # group matches "N bonded to CX4" three times, once per ethyl branch —
+    # which previously left duplicate entries for one physical atom in the
+    # site list. That inflated _ionization_profile() with phantom "extra"
+    # basic sites, which _estimate_logd() then treated as genuine secondary
+    # ionization centers (its polyamine-dampening term), measurably
+    # distorting logD for any simple tertiary/dialkylated amine (confirmed:
+    # triethylamine came out ~0.5 logD units too low from this alone).
+    # Keeping the first match per atom index is sufficient here since the
+    # patterns above are mutually exclusive per nitrogen type.
+    seen = {}
+    for atom_idx, base_pka, name in sites:
+        if atom_idx not in seen:
+            seen[atom_idx] = (atom_idx, base_pka, name)
 
-def _basicity_penalty(atom):
+    return list(seen.values())
+
+def _basicity_penalty(atom, site_type: str) -> float:
     """
     Smooth electronic penalty model (no hard tiers)
-    
+
     Penalty is meant to deprioritize basic sites that are
     electronically deactivated by their local environment
-    """
 
+    site_type : the pattern name from _get_basic_sites (e.g.
+        'aliphatic_amine', 'aniline', 'pyridine', 'imidazole', ...).
+        For 'aniline', 'pyridine' and 'imidazole', adjacency to an
+        aromatic ring is definitional to the site type itself — it's
+        already what their calibrated base pKa reflects — so the
+        aromatic-neighbor penalty below is skipped for them. Applying it
+        anyway double-counts that conjugation effect: it previously
+        pushed plain pyridine's estimate down to pKa≈3.4 (real ≈5.2) and
+        would do the same to the aniline baseline (real ≈4.6). It still
+        applies to 'aliphatic_amine' (though after the exclusions in
+        _get_basic_sites those sites can no longer have an aromatic
+        direct neighbor at all), and to 'guanidine'/'amidine', where an
+        aromatic substituent is incidental rather than definitional and
+        genuinely does reduce basicity further.
+    """
     p = 0.0
+    skip_aromatic_penalty = site_type in ("aniline", "pyridine", "imidazole")
 
     for nbr in atom.GetNeighbors():
 
-        if nbr.GetIsAromatic():
+        if nbr.GetIsAromatic() and not skip_aromatic_penalty:
             p += 0.9
 
         if nbr.GetAtomicNum() == 6:
@@ -109,7 +185,7 @@ def _ionization_profile(mol):
     for atom_idx, base_pka, name in sites:
         atom = mol.GetAtomWithIdx(atom_idx)
 
-        pka_eff = base_pka - _basicity_penalty(atom)
+        pka_eff = base_pka - _basicity_penalty(atom, name)
 
         # mild physiological smoothing (CNS relevance)
         score = pka_eff - abs(pka_eff - 7.4) * 0.15 # this factor is tuned to prioritize sites that are closer to neutral at pH 7.4
