@@ -1,11 +1,11 @@
 Drug,Known BBB,Predicted BBB,BBB Probability,BBB Confidence,Predicted Toxicity,Toxicity Probability,Toxicity Confidence
-Donepezil,True,True,0.9751,high,False,0.1397,high
-Sertraline,True,True,0.9715,high,False,0.0733,high
-Clozapine,True,True,0.9804,high,False,0.1191,high
-Levodopa,True,False,0.2787,moderate,False,0.0333,high
-Memantine,True,True,0.9937,high,False,0.0333,high
-Valproic acid,True,True,0.9773,high,False,0.0,high
-Caffeine,True,True,0.9626,high,False,0.0333,high
-Atenolol,False,False,0.2787,moderate,False,0.1395,high
-Morphine,True,True,0.9819,high,False,0.1529,high
-Gabapentin,True,True,0.9746,high,False,0.0867,high
+Donepezil,True,True,0.9689,high,False,0.38,moderate
+Sertraline,True,True,0.969,high,False,0.2333,high
+Clozapine,True,True,0.9936,high,True,0.5133,low
+Levodopa,True,False,0.1987,high,False,0.1733,high
+Memantine,True,True,0.9978,high,False,0.22,high
+Valproic acid,True,True,0.9669,high,False,0.14,high
+Caffeine,True,True,0.9499,high,False,0.3933,low
+Atenolol,False,False,0.1653,high,False,0.3533,moderate
+Morphine,True,True,0.9918,high,False,0.4,low
+Gabapentin,True,True,0.949,high,False,0.2,high
