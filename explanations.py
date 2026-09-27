@@ -14,7 +14,7 @@ molecule rather than reading boilerplate.
 """
 
 from __future__ import annotations
-from schemas import CNSMPOResult, PredictionResult
+from schemas import CNSMPOResult, PredictionResult, ModelArtefact
 
 
 # ── CNS MPO explanations ──────────────────────────────────────────────────────
@@ -355,10 +355,20 @@ def explain_bbbp(result: PredictionResult, mpo_result=None) -> dict:
 
 # ── ClinTox explanation ───────────────────────────────────────────────────────
 
-def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
+def explain_clintox(
+    result: PredictionResult,
+    mpo_result: CNSMPOResult | None = None,
+    artefact: ModelArtefact | None = None,
+) -> dict:
     """
     Generate a molecule-specific explanation for a ClinTox prediction.
- 
+
+    artefact : the ModelArtefact this prediction came from, used only for
+        the dataset-level caveat below (training class balance, F1). It is
+        model-level information, not something derivable from a single
+        prediction's probability — pass it whenever available so the
+        caveat reflects the model actually in use rather than stale text.
+
     Returns
     -------
     dict with keys:
@@ -439,13 +449,35 @@ def explain_clintox(result: PredictionResult, mpo_result=None) -> dict:
                 "antidepressants."
             )
  
-    # Dataset caveat - always shown for ClinTox due to known imbalance
-    body.append(
-        f"Dataset note: ClinTox is heavily imbalanced ({'{:.0f}'.format(100 * (1 - p))}% "
-        "of training molecules are safe). The model was trained with `class_weight='balanced'` "
-        "to compensate, but precision for the toxic class remains limited (F1 ≈ 0.14 on this dataset). "
-        "A negative prediction is more reliable than a positive one."
-    )
+    # Dataset caveat - always shown for ClinTox due to known imbalance.
+    # Both numbers below must come from the artefact (model-level stats),
+    # never from `p` (this molecule's own predicted probability) — the two
+    # are unrelated, and conflating them previously produced a different,
+    # meaningless "% safe" figure for every molecule instead of the actual
+    # training-set class balance.
+    if artefact is not None:
+        counts = artefact.stats.class_balance
+        n_safe, n_toxic = counts.get(0, 0), counts.get(1, 0)
+        n_total = n_safe + n_toxic
+        pct_safe = 100 * n_safe / n_total if n_total else float("nan")
+        body.append(
+            f"Dataset note: ClinTox is heavily imbalanced ({pct_safe:.0f}% of the "
+            f"{n_total} training molecules are labeled safe, {n_toxic} labeled toxic). "
+            f"The model ({artefact.model_algorithm}) was tuned for a decision threshold "
+            f"of {artefact.threshold:.2f} rather than the default 0.5 to keep the toxic "
+            f"class from being predicted away entirely; current test-set performance is "
+            f"F1 ≈ {artefact.f1:.2f} (precision {artefact.precision:.2f}, "
+            f"recall {artefact.recall:.2f}). A negative prediction is considerably more "
+            f"reliable than a positive one at this precision level."
+        )
+    else:
+        # No artefact passed in — give the qualitative caveat without
+        # fabricating specific numbers we don't actually have here.
+        body.append(
+            "Dataset note: ClinTox is heavily imbalanced toward safe compounds. "
+            "Precision on the toxic class is inherently limited by this imbalance; "
+            "a negative prediction is typically more reliable than a positive one."
+        )
  
     caveat = (
         "ClinTox labels reflect trial failure due to toxicity - not all toxic "
