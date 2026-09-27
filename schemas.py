@@ -217,14 +217,28 @@ class ModelArtefact:
     fp_radius:           int = 2
     fp_nbits:            int = 2048
     rf_n_estimators:     int = 150
+    # Decision threshold for predict >= threshold => positive class, tuned
+    # per-model (see ml_model._tune_threshold) instead of assuming 0.5.
+    # Severely imbalanced datasets can produce predict_proba output that
+    # never crosses 0.5 for the minority class even when the underlying
+    # ranking is informative — a fixed 0.5 cutoff then predicts the
+    # majority class for every input. threshold captures the cutoff that
+    # was actually validated for this artefact.
+    threshold:           float = 0.5
+    # Which candidate classifier (see ml_model._train_and_evaluate) was
+    # selected for this artefact, e.g. "class_weighted_rf" or
+    # "balanced_random_forest" — kept for traceability/debugging.
+    model_algorithm:     str = "class_weighted_rf"
 
     def summary(self) -> str:
         return (
             f"{self.dataset_name}  "
+            f"[{self.model_algorithm}]  "
             f"AUC={self.auc:.3f}  "
             f"P={self.precision:.3f}  "
             f"R={self.recall:.3f}  "
-            f"F1={self.f1:.3f}"
+            f"F1={self.f1:.3f}  "
+            f"thr={self.threshold:.3f}"
         )
 
 
@@ -265,12 +279,22 @@ class PredictionResult:
         model_name: str,
         pos_label:  str,
         neg_label:  str,
+        threshold:  float = 0.5,
     ) -> "PredictionResult":
         """
         Construct a PredictionResult from a raw probability, deriving
         the predicted class, confidence band, and label automatically.
+
+        threshold : the decision cutoff for predicted vs. not (defaults to
+            0.5, but callers going through ml_predict.py pass the
+            per-model tuned ModelArtefact.threshold instead — see
+            ml_model._tune_threshold for why a fixed 0.5 can be wrong for
+            imbalanced datasets). Note the confidence band below is still
+            computed from the raw probability's distance from 0.5, not
+            from `threshold` — it describes how certain the model's score
+            is in absolute terms, independent of where we chose to act on it.
         """
-        predicted = prob >= 0.5
+        predicted = prob >= threshold
 
         if prob >= 0.75 or prob <= 0.25:
             confidence = "high"
