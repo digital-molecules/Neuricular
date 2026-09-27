@@ -50,7 +50,7 @@ def load_model(path: str) -> ModelArtefact:
         "model", "auc", "cm", "fpr", "tpr",
         "feature_importances", "stats",
         "dataset_name", "dataset_description",
-        "fp_nbits", "fp_radius",
+        "fp_nbits", "fp_radius", "threshold",
     }
     missing = required - set(vars(artefact).keys())
     if missing:
@@ -142,7 +142,7 @@ def _predict(smiles: str, artefact: ModelArtefact,
 
     return PredictionResult.from_prob(
         smiles=smiles, prob=prob, model_name=artefact.dataset_name,
-        pos_label=pos_label, neg_label=neg_label,
+        pos_label=pos_label, neg_label=neg_label, threshold=artefact.threshold,
     )
 
 
@@ -300,4 +300,3 @@ def _build_reference_panel() -> list:
     return panel
 
 CNS_REFERENCE_DRUGS = _build_reference_panel()
-
