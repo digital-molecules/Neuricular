@@ -83,3 +83,17 @@ Neuricular \
 - CNS MPO: Wager et al., ACS Chem. Neurosci. 2010, 1, 435–449
 - Lipinski Ro5: Lipinski et al., Adv. Drug Deliv. Rev. 1997, 23, 3–25
 - Veber: Veber et al., J. Med. Chem. 2002, 45, 2615–2623
+
+_For the pKa table:_
+- Zheng, J. W. and Lafontant-Joseph, O. (2026) *IUPAC Digitized pKa Dataset*,
+> v2.4a. https://doi.org/10.5281/zenodo.7236452
+> (working copy: https://github.com/IUPAC/Dissociation-Constants)
+>
+> Copyright © 2026 International Union of Pure and Applied Chemistry (IUPAC).
+> **Reproduced by permission of International Union of Pure and Applied
+> Chemistry.** Licensed under CC BY-NC 4.0.
+Non-commercial use only, with the attribution above. If Neuricular is ever
+used commercially, this dataset can't be used as-is.
+Also cite: Zheng, J. W., Lafontant-Joseph, O., Green, W. H. Digitized Dataset
+of Aqueous Acid Dissociation Constants, RSC Advances 16 (23), 21397–21412 (2026).
+
