@@ -85,7 +85,8 @@ Neuricular \
 - Veber: Veber et al., J. Med. Chem. 2002, 45, 2615–2623
 
 _For the pKa table:_
-- Zheng, J. W. and Lafontant-Joseph, O. (2026) *IUPAC Digitized pKa Dataset*,
+-  Zheng, J. W., Lafontant-Joseph, O., Green, W. H. Digitized Dataset
+of Aqueous Acid Dissociation Constants, RSC Advances 16 (23), 21397–21412 (2026)
 > v2.4a. https://doi.org/10.5281/zenodo.7236452
 > (working copy: https://github.com/IUPAC/Dissociation-Constants)
 >
@@ -94,6 +95,3 @@ _For the pKa table:_
 > Chemistry.** Licensed under CC BY-NC 4.0.
 Non-commercial use only, with the attribution above. If Neuricular is ever
 used commercially, this dataset can't be used as-is.
-Also cite: Zheng, J. W., Lafontant-Joseph, O., Green, W. H. Digitized Dataset
-of Aqueous Acid Dissociation Constants, RSC Advances 16 (23), 21397–21412 (2026).
-
