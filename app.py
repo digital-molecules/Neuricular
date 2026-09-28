@@ -23,7 +23,9 @@ from rdkit import Chem
 
 from chem_calc import get_descriptor_profile, get_cns_mpo, get_tanimoto, get_cns_tanimoto_panel, resolve_smiles
 from ml_predict import load_model, predict_bbbp, predict_clintox, get_top_features, CNS_REFERENCE_DRUGS
-from exceptions import InvalidSMILESError, ModelLoadError, PredictionError
+from exceptions import InvalidSMILESError, ModelLoadError, PredictionError, PkaDatabaseError
+from pka_lookup import load_pka_table
+from schemas import PKA_MATCHED, PKA_NOT_FOUND, PKA_DB_UNAVAILABLE
 from explanations import explain_cns_mpo, explain_bbbp, explain_clintox
 
 # ── Logging ───────────────────────────────────────────────────────────────────
@@ -155,7 +157,23 @@ def _load_models():
 
 bbbp_model, clintox_model, model_errors = _load_models()
 
+
+@st.cache_resource(show_spinner=False)
+def _check_pka_database():
+    """(entry_count, error_message). The lookup is the only source of pKa."""
+    try:
+        return len(load_pka_table()), None
+    except PkaDatabaseError as e:
+        return 0, str(e)
+
+pka_db_size, pka_db_error = _check_pka_database()
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _fmt_opt(value, na: str = "n/a") -> str:
+    """Format an optional number; None (e.g. no database pKa) shows as n/a."""
+    return na if value is None else f"{value}"
+
 
 def _label(text: str) -> str:
     """Render a small monospace section label."""
@@ -230,6 +248,13 @@ if model_errors:
             icon="⚠️"
         )
 
+if pka_db_error:
+    st.warning(
+        f"pKa database not loaded, so pKa and logD will be unavailable and CNS MPO "
+        f"will be scored over four properties. {pka_db_error}",
+        icon="⚠️",
+    )
+
 # ── SMILES input ──────────────────────────────────────────────────────────────
 col_in, col_hint = st.columns([3, 2])
 with col_in:
@@ -300,7 +325,7 @@ with tab1:
             metrics = [
                 ("MW (Da)",    f"{profile.mw}"),
                 ("logP",       f"{profile.logp}"),
-                ("logD (7.4)", f"{profile.logd}"),
+                ("logD (7.4)", _fmt_opt(profile.logd)),
                 ("TPSA (Å²)",  f"{profile.tpsa}"),
                 ("HBD",        f"{profile.hbd}"),
                 ("HBA",        f"{profile.hba}"),
@@ -311,10 +336,25 @@ with tab1:
                 col.metric(label, val)
 
             st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-            st.warning(
-            "⚠️ Note: pKa and logD values shown here are rough computational estimates. "
-            "They are derived from rule-based heuristics and RDKit-based structural analysis, "
-            "and should be used for screening only, not as experimentally accurate values.")
+            if profile.pka_status == PKA_MATCHED:
+                m = profile.pka_match
+                st.info(
+                    f"pKa {m.pka:g} (most basic centre) is an experimental value from the "
+                    f"{m.source} (IUPAC rating: {m.assessment}). logD is calculated from "
+                    "logP and this pKa."
+                )
+            elif profile.pka_status == PKA_DB_UNAVAILABLE:
+                st.warning(
+                    "The pKa lookup table could not be loaded, so pKa and logD are "
+                    "unavailable."
+                )
+            else:
+                st.info(
+                    "No pKa match was found for this molecule in the IUPAC pKa dataset "
+                    "(compiled from 1965-1979 reference works, so newer compounds are "
+                    "often absent). pKa is not estimated as a substitute, and logD, which "
+                    "is calculated from pKa, is therefore not available."
+                )
             # Rule badges
             c1, c2 = st.columns(2)
             with c1:
@@ -499,7 +539,7 @@ with tab1:
             |---|---|---|
             | MW | Molecular weight (Da) | < 500 (Lipinski) |
             | logP | Octanol-water partition coefficient (lipophilicity) | < 5 (Lipinski) |
-            | logD | logP corrected for ionisation at pH 7.4 (estimated) | ≤ 2 for CNS (MPO) |
+            | logD | logP corrected for ionisation at pH 7.4, from the database pKa (n/a without one) | ≤ 2 for CNS (MPO) |
             | TPSA | Topological polar surface area (Å²) | ≤ 140 (Veber) |
             | HBD | H-bond donors | ≤ 5 (Lipinski) |
             | HBA | H-bond acceptors | ≤ 10 (Lipinski) |
@@ -528,9 +568,12 @@ with tab2:
             mpo = None
 
         if mpo:
+            mpo_frac    = mpo.total / mpo.max_total
+            mpo_partial = mpo.max_total < 6
+            mpo_cutoff  = 4.0 * mpo.max_total / 6.0   # 4.0 of 6, scaled to the terms scored
             score_color = (
-                "#2D7A4F" if mpo.total >= 4
-                else "#8B6914" if mpo.total >= 2.5
+                "#2D7A4F" if mpo.cns_optimised
+                else "#8B6914" if mpo_frac >= 2.5 / 6
                 else "#9B2335"
             )
 
@@ -545,14 +588,14 @@ with tab2:
                     <div style="font-family:'IBM Plex Mono',monospace; font-size:3rem;
                                 font-weight:500; color:{score_color}; line-height:1.05;">
                         {mpo.total:.2f}
-                        <span style="font-size:1.1rem; color:#7A9ABF;"> / 6.00</span>
+                        <span style="font-size:1.1rem; color:#7A9ABF;"> / {mpo.max_total:.2f}</span>
                     </div>
                 </div>
                 <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.92rem;
                             color:{'#2D7A4F' if mpo.cns_optimised else '#9B2335'};
                             align-self:center;">
-                    {'✓ CNS-optimised (threshold ≥ 4.0)' if mpo.cns_optimised
-                     else '✗ Not CNS-optimised (below threshold of 4.0)'}
+                    {f'✓ CNS-optimised (threshold ≥ {mpo_cutoff:.2f})' if mpo.cns_optimised
+                     else f'✗ Not CNS-optimised (below threshold of {mpo_cutoff:.2f})'}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -592,6 +635,15 @@ with tab2:
                     unsafe_allow_html=True,
                 )
 
+            if mpo_partial:
+                st.markdown(
+                    f"<div style='font-family:IBM Plex Mono,monospace; font-size:0.78rem; "
+                    f"color:#7A9ABF; margin-top:0.3rem;'>"
+                    f"Not scored: {', '.join(mpo.missing_properties)} "
+                    f"(partial MPO over {int(mpo.max_total)} of 6 properties)</div>",
+                    unsafe_allow_html=True,
+                )
+
             # ── Dynamic explanation ───────────────────────────────────────────
             st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
             st.markdown(_label("Structural interpretation"), unsafe_allow_html=True)
@@ -602,10 +654,7 @@ with tab2:
                 f"color:{sev_color}; margin-bottom:0.8rem;'>{expl['headline']}</div>",
                 unsafe_allow_html=True,
             )
-            if len(expl["paragraphs"]) > 1 or expl["paragraphs"][0] != (
-                "All six CNS MPO properties are within their ideal ranges,"
-                "no specific structural liabilities identified at this level of analysis."
-            ):
+            if not expl["all_optimal"]:
                 for para in expl["paragraphs"]:
                     st.markdown(
                         f"<div style='background:#EDD3DF; border:1px solid #C9A8BB; "
@@ -615,12 +664,13 @@ with tab2:
                         f"color:#496D99; line-height:1.7;'>{para}</div>",
                         unsafe_allow_html=True,
                     )
-            if expl["optimisation"] and expl["optimisation"][0] != (
-                "No immediate structural changes suggested, the molecule already meets CNS MPO criteria."
-            ):
+            if expl["optimisation"] and not expl["all_optimal"]:
                 with st.expander("💡 Structural optimisation suggestions"):
                     for sug in expl["optimisation"]:
                         st.markdown(f"- {sug}")
+
+            for note in expl["notes"]:
+                st.info(note)
 
         with st.expander("Reference / CNS MPO desirability functions"):
             st.markdown("""
@@ -635,9 +685,13 @@ with tab2:
             | HBD | 0-1 | 2 (= 0.5) | ≥ 3 |
             | pKa (most basic) | ≤ 8 | 8-10 | > 10 |
 
-            > Note on pKa and logD: These values are estimated using structural
-            > heuristics (nitrogen-type rules), not quantum-mechanical calculations.
-            > For definitive values, use ChemAxon Marvin or Schrödinger Epik.
+            > Note on pKa and logD: pKa is taken only from the IUPAC Digitized pKa
+            > Dataset (experimental values, matched by structure); it is never
+            > estimated. logD is calculated from logP and that pKa. When the
+            > dataset has no entry for a molecule, both terms are left out and the
+            > score is taken over MW, logP, TPSA and HBD, with the optimised
+            > threshold scaled to the same proportion (2.67 of 4 in place of 4.0 of 6).
+            > A partial score is not directly comparable to a six-property one.
             """)
 
 
@@ -770,8 +824,11 @@ with tab3:
                 detail = f"P(tox)={tox_result.probability:.1%}" if tox_result else "N/A"
                 st.markdown(_verdict_card("Low Toxicity Risk", tox_pass, detail), unsafe_allow_html=True)
             with vc3:
-                detail = f"MPO={mpo_v.total:.2f}/6" if mpo_v else "N/A"
-                st.markdown(_verdict_card("CNS MPO ≥ 4.0", mpo_pass, detail), unsafe_allow_html=True)
+                detail = f"MPO={mpo_v.total:.2f}/{mpo_v.max_total:.0f}" if mpo_v else "N/A"
+                mpo_label = "CNS MPO ≥ 4.0"
+                if mpo_v and mpo_v.max_total < 6:
+                    mpo_label = f"CNS MPO ≥ {4.0 * mpo_v.max_total / 6:.2f} (partial)"
+                st.markdown(_verdict_card(mpo_label, mpo_pass, detail), unsafe_allow_html=True)
 
             n_pass = sum([bbb_pass, tox_pass, mpo_pass])
             verdict_map = {
@@ -786,6 +843,11 @@ with tab3:
                 f"font-size:0.9rem; color:{vcolor};'>{n_pass}/3 - {vtext}</div>",
                 unsafe_allow_html=True,
             )
+            if mpo_v and mpo_v.max_total < 6:
+                st.caption(
+                    "CNS MPO here is partial (no pKa match in the IUPAC dataset, so logD "
+                    "and pKa were not scored). Read the third criterion with that in mind."
+                )
 
         with st.expander("Methodology (how the ML models work)"):
             st.markdown("""
@@ -819,6 +881,7 @@ with tab4:
     )
 
     rows = []
+    mpo_frac_by_drug = {}   # name -> (fraction of max score, is_partial)
     for drug in CNS_REFERENCE_DRUGS:
         bbbp_r = clintox_r = mpo_r = None
 
@@ -860,8 +923,13 @@ with tab4:
             "Predicted BBB":  f"{bbbp_r.probability:.2f}" if bbbp_r else "-",
             "Model agrees":   agrees_str,
             "Tox P(tox)":     f"{clintox_r.probability:.2f}" if clintox_r else "-",
-            "CNS MPO":        f"{mpo_r.total:.2f}" if mpo_r else "-",
+            "CNS MPO":        f"{mpo_r.total:.2f}/{mpo_r.max_total:.0f}" if mpo_r else "-",
+            "pKa (IUPAC)":    (f"{mpo_r.raw_pka:g}" if mpo_r and mpo_r.raw_pka is not None
+                               else "not found"),
         })
+        mpo_frac_by_drug[drug["name"]] = (
+            (mpo_r.total / mpo_r.max_total, mpo_r.max_total < 6) if mpo_r else (0.0, False)
+        )
 
     df_ref = pd.DataFrame(rows)
     st.dataframe(df_ref, use_container_width=True, hide_index=True)
@@ -871,32 +939,36 @@ with tab4:
     st.markdown(_label("CNS MPO scores / reference drug panel"), unsafe_allow_html=True)
 
     names_r  = [r["Drug"] for r in rows]
-    mpo_vals = []
-    for r in rows:
-        try:
-            mpo_vals.append(float(r["CNS MPO"]))
-        except ValueError:
-            mpo_vals.append(0.0)
+    fracs    = [mpo_frac_by_drug[n][0] for n in names_r]
+    partial  = [mpo_frac_by_drug[n][1] for n in names_r]
+    labels_r = [r["CNS MPO"] for r in rows]
 
+    # Scores are plotted as a fraction of each molecule's maximum so 4-term
+    # (no pKa match) and 6-term scores share one axis. The optimised cut-off
+    # is 4.0/6 = 2/3 of the maximum either way. Partial scores are hatched.
     bar_cols = [
-        "#2D7A4F" if v >= 4 else "#8B6914" if v >= 2.5 else "#9B2335"
-        for v in mpo_vals
+        "#2D7A4F" if f >= 4 / 6 else "#8B6914" if f >= 2.5 / 6 else "#9B2335"
+        for f in fracs
     ]
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    bars = ax.bar(names_r, mpo_vals, color=bar_cols, width=0.6, zorder=2)
-    ax.axhline(4.0, color="#9B2335", linestyle="--", lw=1.2, alpha=0.7,
-               label="CNS-optimised threshold (≥ 4.0)")
-    ax.set_ylabel("CNS MPO Score")
-    ax.set_title("CNS MPO - Reference Drug Panel")
-    ax.set_ylim(0, 7)
+    bars = ax.bar(names_r, fracs, color=bar_cols, width=0.6, zorder=2)
+    for bar, is_partial in zip(bars, partial):
+        if is_partial:
+            bar.set_hatch("//")
+            bar.set_edgecolor("white")
+    ax.axhline(4 / 6, color="#9B2335", linestyle="--", lw=1.2, alpha=0.7,
+               label="CNS-optimised threshold (≥ 4.0 of 6, i.e. ≥ 67% of max)")
+    ax.set_ylabel("CNS MPO (fraction of max score)")
+    ax.set_title("CNS MPO - Reference Drug Panel (hatched = partial, no pKa match)")
+    ax.set_ylim(0, 1.12)
     ax.grid(axis="y", zorder=0)
     ax.legend(fontsize=8)
     plt.xticks(rotation=22, ha="right", fontsize=9)
-    for bar, v in zip(bars, mpo_vals):
+    for bar, f, lab in zip(bars, fracs, labels_r):
         ax.text(
-            bar.get_x() + bar.get_width() / 2, v + 0.08,
-            f"{v:.1f}", ha="center", va="bottom", fontsize=8.5, color="#496D99",
+            bar.get_x() + bar.get_width() / 2, f + 0.01,
+            lab, ha="center", va="bottom", fontsize=8.5, color="#496D99",
         )
     plt.tight_layout()
     st.pyplot(fig)

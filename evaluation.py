@@ -20,6 +20,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from chem_calc import ML_DESCRIPTOR_NAMES
 from ml_predict import (
     predict_bbbp,
     CNS_REFERENCE_DRUGS,
@@ -160,9 +161,11 @@ plt.close()
 # --------------------------------------------------
 # Feature Importance — Physicochemical Descriptors
 # --------------------------------------------------
-# The feature vector is [2048 Morgan fingerprint bits] + [8 descriptors].
-# Descriptor indices 2048-2055 correspond to:
-DESCRIPTOR_NAMES = ["MW", "logP", "logD", "TPSA", "HBD", "HBA", "RotBonds", "QED"]
+# The feature vector is [2048 Morgan fingerprint bits] + [physicochemical
+# descriptors]. The descriptor names/order come from chem_calc so this plot can
+# never drift out of sync with what the models were trained on (logD and pKa
+# are not features: they depend on the database pKa lookup).
+DESCRIPTOR_NAMES = ML_DESCRIPTOR_NAMES
 DESCRIPTOR_START = 2048
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))

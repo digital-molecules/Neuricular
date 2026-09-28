@@ -22,6 +22,36 @@ from typing import Optional
 
 # ── Chemistry result schemas ──────────────────────────────────────────────────
 
+# Values for the pka_status field on DescriptorProfile / CNSMPOResult.
+PKA_MATCHED = "matched"                      # found in the IUPAC-derived lookup
+PKA_NOT_FOUND = "not_found"                  # database loaded, no entry for this molecule
+PKA_DB_UNAVAILABLE = "database_unavailable"  # lookup table missing/corrupt (deployment issue)
+
+
+@dataclass
+class PkaMatch:
+    """
+    A basic-pKa value found in the IUPAC Digitized pKa Dataset.
+
+    Fields
+    ------
+    pka             : float — pKa of the conjugate acid of the most basic centre
+    pka_type        : str   — source label of the chosen value (e.g. 'pKaH1')
+    n_values        : int   — how many repeated measurements were combined (median)
+    pka_min/pka_max : float — spread of those measurements
+    assessment      : str   — best IUPAC reliability rating among them
+                              ('Reliable' | 'Approximate' | 'Uncertain' | 'Unrated')
+    source          : str   — citation label for display
+    """
+    pka:        float
+    pka_type:   str
+    n_values:   int
+    pka_min:    float
+    pka_max:    float
+    assessment: str
+    source:     str = "IUPAC Digitized pKa Dataset v2.4a"
+
+
 @dataclass
 class DescriptorProfile:
     """
@@ -30,29 +60,37 @@ class DescriptorProfile:
     Lipinski and Veber rule checks are derived automatically at construction
     from the raw descriptor values so callers never recompute them.
 
+    logD and pKa depend on an experimental pKa from the IUPAC-derived
+    lookup. There is no estimation fallback: when no entry is found both are
+    None, and pka_status says why.
+
     Fields
     ------
     smiles     : str   — input SMILES (stored for traceability)
     mw         : float — molecular weight (Da)
     logp       : float — Wildman-Crippen logP (octanol-water partition)
-    logd       : float — estimated logD at pH 7.4 (nitrogen-count heuristic)
+    logd       : float | None — logD at pH 7.4 from logP and the database pKa
     tpsa       : float — topological polar surface area (Å²)
     hbd        : int   — H-bond donors
     hba        : int   — H-bond acceptors
     rotbond    : int   — rotatable bonds
     qed        : float — quantitative estimate of drug-likeness (0–1)
-    pka_basic  : float — estimated most-basic pKa (structural heuristic)
+    pka_basic  : float | None — experimental most-basic pKa, or None
+    pka_match  : PkaMatch | None — provenance of pka_basic
+    pka_status : str   — PKA_MATCHED | PKA_NOT_FOUND | PKA_DB_UNAVAILABLE
     """
     smiles:     str
     mw:         float
     logp:       float
-    logd:       float
+    logd:       Optional[float]
     tpsa:       float
     hbd:        int
     hba:        int
     rotbond:    int
     qed:        float
-    pka_basic:  float
+    pka_basic:  Optional[float]
+    pka_match:  Optional[PkaMatch] = None
+    pka_status: str = PKA_NOT_FOUND
     # Derived rule checks — set by __post_init__, not passed by caller
     lipinski:   bool = field(init=False)
     veber:      bool = field(init=False)
@@ -75,38 +113,58 @@ class CNSMPOResult:
     Per-property CNS MPO contributions and aggregated score.
 
     Reference: Wager et al., ACS Chem. Neurosci. 2010, 1, 435–449.
-    Score ≥ 4.0 is considered CNS-optimised per the original publication.
+    The published score is the sum of six 0–1 desirability terms, with
+    >= 4.0 (of 6) considered CNS-optimised.
 
-    Each score_* field holds the piecewise-linear desirability value (0–1)
-    for that property. raw_* fields hold the actual computed descriptor value
-    used as input to the desirability function, preserved for display and audit.
+    logD and pKa terms are only scored when the IUPAC-derived lookup has a
+    pKa for the molecule (logD needs the pKa to correct for ionisation).
+    When it doesn't, both terms are left out and the score is taken over the
+    four remaining properties (MW, logP, TPSA, HBD). In that case:
+      - max_total is 4.0 instead of 6.0
+      - cns_optimised applies the same proportion as 4.0/6 (i.e. total >= 2/3
+        of max_total), so 2.67/4 plays the role of 4.0/6
+    Such a score is a partial assessment and is not directly comparable to a
+    full six-term score; the UI and explanations say so.
+
+    score_* fields hold the piecewise-linear desirability value (0–1);
+    raw_* fields hold the descriptor value fed into it, for display/audit.
+    score_logd / score_pka / raw_logd / raw_pka are None when unavailable.
 
     Properties
     ----------
-    per_property   : dict[str, float] — {property_name: contribution}
-    raw_values     : dict[str, float] — {property_name: raw_descriptor_value}
-    failed_properties : list[str]     — properties contributing < 1.0
+    per_property      : dict[str, float] — contribution per *scored* property
+    raw_values        : dict[str, float] — raw value per *scored* property
+    failed_properties : list[str]        — scored properties contributing < 1.0
+    missing_properties: list[str]        — properties left out (e.g. logD, pKa)
+    pka_available     : bool
     """
     smiles:        str
     score_mw:      float
     score_logp:    float
-    score_logd:    float
     score_tpsa:    float
     score_hbd:     float
-    score_pka:     float
+    score_logd:    Optional[float]
+    score_pka:     Optional[float]
     total:         float
+    max_total:     float
     cns_optimised: bool
     # Raw descriptor values (audit trail)
     raw_mw:        float
     raw_logp:      float
-    raw_logd:      float
     raw_tpsa:      float
     raw_hbd:       int
-    raw_pka:       float
+    raw_logd:      Optional[float]
+    raw_pka:       Optional[float]
+    pka_match:     Optional[PkaMatch] = None
+    pka_status:    str = PKA_NOT_FOUND
+
+    @property
+    def pka_available(self) -> bool:
+        return self.score_pka is not None
 
     @property
     def per_property(self) -> dict[str, float]:
-        return {
+        terms = {
             "MW":   self.score_mw,
             "logP": self.score_logp,
             "logD": self.score_logd,
@@ -114,10 +172,11 @@ class CNSMPOResult:
             "HBD":  self.score_hbd,
             "pKa":  self.score_pka,
         }
+        return {k: v for k, v in terms.items() if v is not None}
 
     @property
     def raw_values(self) -> dict[str, float | int]:
-        return {
+        raws = {
             "MW":   self.raw_mw,
             "logP": self.raw_logp,
             "logD": self.raw_logd,
@@ -125,11 +184,18 @@ class CNSMPOResult:
             "HBD":  self.raw_hbd,
             "pKa":  self.raw_pka,
         }
+        scored = self.per_property
+        return {k: v for k, v in raws.items() if k in scored}
 
     @property
     def failed_properties(self) -> list[str]:
-        """Properties that contribute less than 1.0 (not fully optimal)."""
+        """Scored properties that contribute less than 1.0 (not fully optimal)."""
         return [k for k, v in self.per_property.items() if v < 1.0]
+
+    @property
+    def missing_properties(self) -> list[str]:
+        """Properties left out of the score because they couldn't be computed."""
+        return [k for k in ("logD", "pKa") if k not in self.per_property]
 
 
 # ── ML pipeline schemas ───────────────────────────────────────────────────────

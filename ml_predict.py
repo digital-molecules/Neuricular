@@ -13,7 +13,7 @@ import pickle
 
 import numpy as np
 
-from chem_calc import get_morgan_fp_array
+from chem_calc import get_morgan_fp_array, get_ml_descriptors, ML_DESCRIPTOR_NAMES
 from exceptions import ModelLoadError, PredictionError
 from schemas import ModelArtefact, PredictionResult
 
@@ -65,6 +65,19 @@ def load_model(path: str) -> ModelArtefact:
             "Expected a RandomForestClassifier."
         )
 
+    # Fail at load time, not at first prediction, if the model was trained on a
+    # different feature layout (e.g. before pKa/logD were removed from the
+    # features): its expected input width won't match what we build now.
+    expected = artefact.fp_nbits + len(ML_DESCRIPTOR_NAMES)
+    n_in = getattr(artefact.model, "n_features_in_", None)
+    if n_in is not None and n_in != expected:
+        raise ModelLoadError(
+            f"Model '{path}' expects {n_in} features but the current pipeline "
+            f"builds {expected} ({artefact.fp_nbits} fingerprint bits + "
+            f"{len(ML_DESCRIPTOR_NAMES)} descriptors). It was trained with an "
+            "older feature set. Re-run 'python ml_model.py' to retrain."
+        )
+
     logger.info(
         "Loaded '%s' (AUC=%.3f, n_train=%d)",
         artefact.dataset_name, artefact.auc, artefact.stats.n_train,
@@ -78,37 +91,27 @@ def _build_inference_features(smiles: str) -> np.ndarray:
     """
     Build the combined feature vector for inference — must exactly match
     the vector built by ml_model._build_features() at training time:
-        [Morgan fingerprint (2048 bits)] + [8 physicochemical descriptors]
-        = 2056 features total, dtype float32.
+        [Morgan fingerprint (2048 bits)] + [physicochemical descriptors]
+    with the descriptors and their order defined once, by
+    chem_calc.ML_DESCRIPTOR_NAMES / get_ml_descriptors (MW, logP, TPSA, HBD,
+    HBA, RotBonds, QED). dtype float32.
 
-    Descriptor order: MW, logP, logD, TPSA, HBD, HBA, RotBonds, QED
+    pKa and logD are not features: they depend on a database lookup that most
+    molecules have no entry in.
 
     Raises
     ------
     InvalidSMILESError  — SMILES cannot be parsed
     PredictionError     — descriptor calculation failed
     """
-    from chem_calc import get_descriptor_profile
-
     fp_list = get_morgan_fp_array(smiles)   # raises InvalidSMILESError if bad
 
     try:
-        desc = get_descriptor_profile(smiles)
+        desc_vec = get_ml_descriptors(smiles)
     except Exception as exc:
         raise PredictionError(
             f"Descriptor calculation failed for '{smiles}': {exc}"
         ) from exc
-
-    desc_vec = [
-        desc.mw,
-        desc.logp,
-        desc.logd,
-        desc.tpsa,
-        float(desc.hbd),
-        float(desc.hba),
-        float(desc.rotbond),
-        desc.qed,
-    ]
 
     return np.array(fp_list + desc_vec, dtype=np.float32).reshape(1, -1)
 
@@ -125,7 +128,7 @@ def _predict(smiles: str, artefact: ModelArtefact,
     """
     X = _build_inference_features(smiles)
 
-    expected = artefact.fp_nbits + 8   # 2048 fingerprint bits + 8 descriptors
+    expected = artefact.fp_nbits + len(ML_DESCRIPTOR_NAMES)   # fingerprint bits + descriptors
     if X.shape[1] != expected:
         raise PredictionError(
             f"Feature vector length mismatch: built {X.shape[1]} features "
@@ -300,3 +303,4 @@ def _build_reference_panel() -> list:
     return panel
 
 CNS_REFERENCE_DRUGS = _build_reference_panel()
+

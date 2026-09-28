@@ -15,6 +15,7 @@ Chemistry errors (ValueError subclasses — represent bad user input):
     InsufficientMoleculeError
 
 ML pipeline errors (RuntimeError subclasses — represent infrastructure/data failures):
+    PkaDatabaseError
     DatasetLoadError
     InsufficientDataError
     ModelTrainingError
@@ -116,4 +117,16 @@ class PredictionError(RuntimeError):
     Distinct from InvalidSMILESError: the molecule parsed correctly,
     but something went wrong during fingerprint generation or model inference
     (e.g. fingerprint length mismatch between training and runtime config).
+    """
+
+
+class PkaDatabaseError(RuntimeError):
+    """
+    Raised when the IUPAC-derived pKa lookup table (data/pka_basic_lookup.csv)
+    is missing or malformed.
+
+    Distinct from "no pKa match found for this molecule", which is a normal
+    outcome. This is a deployment problem: without it every molecule would
+    look unmatched, and the UI would wrongly say the database has no entry.
+    The message always includes the instruction to re-run build_pka_lookup.py.
     """

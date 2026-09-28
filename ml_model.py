@@ -51,7 +51,7 @@ from exceptions import (
     DatasetLoadError, InsufficientDataError, ModelTrainingError
 )
 from schemas import DatasetStats, ModelArtefact
-from chem_calc import get_descriptor_profile
+from chem_calc import get_ml_descriptors, ML_DESCRIPTOR_NAMES
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -69,8 +69,10 @@ RF_RANDOM_STATE = 42
 TEST_SIZE       = 0.20
 
 # Number of physicochemical descriptor features appended after the fingerprint.
-# Must stay in sync with _build_features() below.
-N_DESC_FEATURES = 8
+# Derived from chem_calc.ML_DESCRIPTOR_NAMES, the single source of truth for
+# which descriptors are used and in what order. These exclude logD and pKa on
+# purpose: both depend on the database pKa, which most molecules don't have.
+N_DESC_FEATURES = len(ML_DESCRIPTOR_NAMES)
 
 # Module-level Morgan generator — replaces deprecated GetMorganFingerprintAsBitVect.
 _MORGAN_GEN = rdFingerprintGenerator.GetMorganGenerator(radius=FP_RADIUS, fpSize=FP_NBITS)
@@ -129,37 +131,28 @@ def _smiles_to_fp(smiles: str) -> list | None:
 
 def _build_features(smiles: str) -> list | None:
     """
-    Combined feature vector: Morgan fingerprint (2048 bits) + 8 physicochemical
-    descriptors appended as float values.
+    Combined feature vector: Morgan fingerprint (2048 bits) + physicochemical
+    descriptors appended as float values (see chem_calc.ML_DESCRIPTOR_NAMES:
+    MW, logP, TPSA, HBD, HBA, RotBonds, QED).
+
+    No pKa or logD: they come from a lookup that most molecules have no entry
+    in, so using them would mean training on a feature that is missing for the
+    majority of the data.
 
     float32 array avoids uint8 overflow for descriptor values like MW/TPSA.
     All RDKit stderr (valence warnings, hydrogen warnings, kekulization errors)
     is suppressed here — errors are already handled by the None-return path.
-
-    Descriptor order (must match N_DESC_FEATURES and _build_inference_features):
-        MW, logP, logD, TPSA, HBD, HBA, RotBonds, QED
     """
     try:
         with open(os.devnull, "w") as devnull, contextlib.redirect_stderr(devnull):
             mol = Chem.MolFromSmiles(str(smiles).strip())
             if mol is None:
                 raise ValueError("RDKit returned None")
-            fp   = list(_MORGAN_GEN.GetFingerprint(mol))
-            desc = get_descriptor_profile(smiles)
+            fp       = list(_MORGAN_GEN.GetFingerprint(mol))
+            desc_vec = get_ml_descriptors(smiles)
     except Exception as exc:
         logger.debug("Skipping '%s': %s", smiles, exc)
         return None
-
-    desc_vec = [
-        desc.mw,
-        desc.logp,
-        desc.logd,
-        desc.tpsa,
-        float(desc.hbd),
-        float(desc.hba),
-        float(desc.rotbond),
-        desc.qed,
-    ]
 
     return fp + desc_vec
 

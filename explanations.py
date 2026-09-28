@@ -14,7 +14,10 @@ molecule rather than reading boilerplate.
 """
 
 from __future__ import annotations
-from schemas import CNSMPOResult, PredictionResult, ModelArtefact
+from schemas import (
+    CNSMPOResult, PredictionResult, ModelArtefact,
+    PKA_MATCHED, PKA_NOT_FOUND, PKA_DB_UNAVAILABLE,
+)
 
 
 # ── CNS MPO explanations ──────────────────────────────────────────────────────
@@ -23,6 +26,11 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
     """
     Generate a molecule-specific explanation for a CNS MPO result.
 
+    The pKa and logD terms are only scored when the IUPAC-derived lookup has a
+    pKa for the molecule; otherwise the MPO covers four properties and `notes`
+    explains why (no estimation is substituted). Tiers below are proportions of
+    the maximum score, equivalent to the 6-term cut-offs when all terms exist.
+
     Returns
     -------
     dict with keys:
@@ -30,33 +38,44 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
         paragraphs  : list[str] - per-property commentary (only for non-ideal props)
         optimisation: list[str] - concrete structural suggestions
         severity    : str  - 'good' | 'moderate' | 'poor'
+        notes       : list[str] - provenance / completeness notes (pKa source or
+                      why pKa and logD were left out); empty if nothing to say
+        all_optimal : bool - True when every scored property is at its ideal
+                      (paragraphs/optimisation then hold only a filler line)
     """
-    score = result.total
-    raw   = result.raw_values
-    props = result.per_property
+    score   = result.total
+    raw     = result.raw_values
+    props   = result.per_property
+    n_terms = int(result.max_total)
+    frac    = score / result.max_total   # 0-1, comparable across 4- and 6-term scores
 
-    if score >= 4.5:
+    # e.g. "MPO 2.00/4, scored over 4 of 6 properties" when logD/pKa are missing
+    basis = f"MPO {score:.2f}/{n_terms}"
+    if n_terms < 6:
+        basis += f", scored over {n_terms} of 6 properties"
+
+    if frac >= 4.5 / 6:
         severity = "good"
         headline = (
-            f"Strong CNS profile (MPO {score:.2f}/6). "
+            f"Strong CNS profile ({basis}). "
             "This molecule satisfies most criteria for CNS drug-likeness."
         )
-    elif score >= 4.0:
+    elif result.cns_optimised:
         severity = "good"
         headline = (
-            f"Acceptable CNS profile (MPO {score:.2f}/6) - just above the optimised threshold. "
+            f"Acceptable CNS profile ({basis}) - just above the optimised threshold. "
             "Minor structural refinements could push the score higher."
         )
-    elif score >= 2.5:
+    elif frac >= 2.5 / 6:
         severity = "moderate"
         headline = (
-            f"Moderate CNS profile (MPO {score:.2f}/6). "
+            f"Moderate CNS profile ({basis}). "
             "The molecule has notable liabilities that reduce predicted CNS optimisation."
         )
     else:
         severity = "poor"
         headline = (
-            f"Poor CNS profile (MPO {score:.2f}/6). "
+            f"Poor CNS profile ({basis}). "
             "Multiple properties fall outside the CNS-optimised range - significant "
             "structural redesign would be needed for CNS drug development."
         )
@@ -114,7 +133,7 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             )
 
     # logD
-    if props["logD"] < 1.0:
+    if props.get("logD", 1.0) < 1.0:
         ld = raw["logD"]
         if ld > 4:
             paragraphs.append(
@@ -186,11 +205,11 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             optimisation.append("Converting one NH or OH to a non-donor bioisostere would recover full MPO credit.")
 
     # pKa
-    if props["pKa"] < 1.0:
+    if props.get("pKa", 1.0) < 1.0:
         pka = raw["pKa"]
         if pka > 10:
             paragraphs.append(
-                f"Estimated pKa ({pka:.1f}) suggests a strongly basic amine. "
+                f"Experimental pKa ({pka:.1f}, IUPAC dataset) suggests a strongly basic amine. "
                 "High basicity (pKa > 10) means the nitrogen is >99.9% protonated at "
                 "physiological pH, which increases hERG channel affinity and the risk of "
                 "phospholipidosis. It also lowers effective logD."
@@ -201,14 +220,15 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             )
         elif pka > 8:
             paragraphs.append(
-                f"Estimated pKa ({pka:.1f}) indicates moderate basicity. "
+                f"Experimental pKa ({pka:.1f}, IUPAC dataset) indicates moderate basicity. "
                 "While tolerable, reducing pKa below 8 would recover the full MPO point "
                 "and reduce hERG liability risk."
             )
 
-    if not paragraphs:
+    all_optimal = not paragraphs
+    if all_optimal:
         paragraphs.append(
-            "All six CNS MPO properties are within their ideal ranges - "
+            f"All {n_terms} scored CNS MPO properties are within their ideal ranges - "
             "no specific structural liabilities identified at this level of analysis."
         )
 
@@ -218,11 +238,46 @@ def explain_cns_mpo(result: CNSMPOResult) -> dict:
             "CNS MPO criteria."
         )
 
+    # pKa provenance / completeness. Never estimated: either the database has
+    # it or the pKa and logD terms are left out and we say so.
+    notes = []
+    if result.pka_status == PKA_NOT_FOUND:
+        notes.append(
+            "A pKa match could not be found for this molecule in the IUPAC pKa "
+            "dataset, so no pKa is reported and none is estimated in its place. "
+            "The dataset is compiled from 1965-1979 reference works, so newer "
+            "compounds are often absent. logD at pH 7.4 is calculated from pKa, so "
+            "it was left out as well: this MPO covers only MW, logP, TPSA and HBD "
+            f"(max {n_terms}.0 instead of 6.0). It is a partial assessment - it cannot "
+            "penalise a strongly basic centre or a high ionisation-corrected "
+            "lipophilicity, and should not be compared directly with a six-property score."
+        )
+    elif result.pka_status == PKA_DB_UNAVAILABLE:
+        notes.append(
+            "The pKa lookup table could not be loaded (data/pka_basic_lookup.csv is "
+            "missing or unreadable), so pKa and logD were left out and this MPO "
+            f"covers only MW, logP, TPSA and HBD (max {n_terms}.0 instead of 6.0). "
+            "Run build_pka_lookup.py to regenerate it."
+        )
+    elif result.pka_status == PKA_MATCHED and result.pka_match is not None:
+        m = result.pka_match
+        spread = (
+            f", {m.n_values} measurements spanning {m.pka_min:g}-{m.pka_max:g}"
+            if m.n_values > 1 else ""
+        )
+        notes.append(
+            f"pKa ({m.pka:g}) and the logD derived from it come from the {m.source} "
+            f"(IUPAC rating: {m.assessment}{spread}). It is an experimental value "
+            "for this exact structure, not a prediction."
+        )
+
     return {
         "headline":     headline,
         "paragraphs":   paragraphs,
         "optimisation": optimisation,
         "severity":     severity,
+        "notes":        notes,
+        "all_optimal":  all_optimal,
     }
 
 
@@ -432,16 +487,23 @@ def explain_clintox(
  
     # Cross-reference MPO pKa for hERG liability hint
     if mpo_result is not None:
-        pka = mpo_result.raw_values["pKa"]
+        pka = mpo_result.raw_values.get("pKa")   # None when no database match
         lp  = mpo_result.raw_values["logP"]
-        if pka > 8 and lp > 3 and result.predicted:
+        if pka is None:
+            if result.predicted:
+                body.append(
+                    "The basic-pKa cross-check for hERG and phospholipidosis risk was "
+                    "skipped: no pKa match was found for this molecule in the IUPAC "
+                    "pKa dataset, and pKa is not estimated as a substitute."
+                )
+        if pka is not None and pka > 8 and lp > 3 and result.predicted:
             body.append(
                 f"Potential hERG liability: Basic pKa ({pka:.1f}) combined with "
                 f"logP ({lp:.2f}) > 3 is a known risk factor for hERG K⁺ channel block, "
                 "which is the most common mechanistic cause of cardiac toxicity-driven "
                 "clinical trial failure. Experimental hERG patch-clamp assay is advisable."
             )
-        if pka > 10 and result.predicted:
+        if pka is not None and pka > 10 and result.predicted:
             body.append(
                 f"Phospholipidosis risk: Strongly basic amines (pKa ≈ {pka:.1f}) are "
                 "associated with cationic amphiphilic drug-induced phospholipidosis - "

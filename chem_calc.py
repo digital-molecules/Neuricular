@@ -7,6 +7,15 @@ All public functions return a typed result (defined in schemas.py) or raise
 a domain exception (defined in exceptions.py). Callers are expected to catch
 InvalidSMILESError and present it appropriately in the UI.
 
+pKa policy
+----------
+pKa comes only from the experimental IUPAC-derived lookup (pka_lookup.py).
+There is no estimation fallback. When a molecule has no entry:
+  - pKa and logD (which needs pKa to correct for ionisation) are None,
+  - the CNS MPO is scored over the four remaining properties,
+  - pKa and logD are never used as machine-learning features
+    (see get_ml_descriptors).
+
 References
 ----------
 - CNS MPO: Wager et al., ACS Chem. Neurosci. 2010, 1, 435-449
@@ -22,8 +31,12 @@ from rdkit import Chem
 from rdkit.Chem import Descriptors, rdMolDescriptors, DataStructs, QED
 from rdkit.Chem import rdFingerprintGenerator
 
-from exceptions import InvalidSMILESError
-from schemas import DescriptorProfile, CNSMPOResult
+from exceptions import InvalidSMILESError, PkaDatabaseError
+from pka_lookup import lookup_basic_pka
+from schemas import (
+    DescriptorProfile, CNSMPOResult, PkaMatch,
+    PKA_MATCHED, PKA_NOT_FOUND, PKA_DB_UNAVAILABLE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,212 +55,44 @@ def _parse(smiles: str) -> Chem.Mol:
         raise InvalidSMILESError(smiles)
     return mol
 
-def _get_basic_sites(mol):
+def _resolve_pka(mol: Chem.Mol) -> tuple:
     """
-    Returns list of (atom_idx, base_pka, type)
+    Look up the experimental basic pKa for `mol`.
+
+    Returns (PkaMatch | None, status). A missing database file is reported as
+    PKA_DB_UNAVAILABLE rather than raised, so the app keeps working and the
+    UI can say the database is unavailable instead of claiming "no match".
     """
+    try:
+        match = lookup_basic_pka(mol)
+    except PkaDatabaseError as exc:
+        logger.error("pKa database unavailable: %s", exc)
+        return None, PKA_DB_UNAVAILABLE
+    if match is None:
+        return None, PKA_NOT_FOUND
+    return match, PKA_MATCHED
 
-    patterns = [
-        # Aliphatic amine: N bonded to an sp3 (CX4) carbon. Explicitly
-        # excludes nitrogens whose lone pair is delocalized elsewhere and so
-        # are not meaningfully basic: amides/carbamates/ureas (N-C(=O)),
-        # thioamides (N-C(=S)), sulfonamides (N-S(=O)(=O)), and nitrogens
-        # bonded to an aromatic ring (handled separately below as
-        # 'aniline', which has much lower basicity due to ring conjugation).
-        # Without these exclusions this pattern also matched amide and
-        # aniline nitrogens with the full 10.5 aliphatic-amine baseline,
-        # e.g. estimating N-methylacetamide's non-basic amide N at pKa≈9.4
-        # (real value ≈ -1 to 0) and N-methylaniline's N at pKa≈9.6 (real
-        # value ≈ 4.6-4.9) — both are common substructures in drug-like
-        # molecules, so this was a significant systematic error.
-        ("aliphatic_amine",
-         Chem.MolFromSmarts(
-             "[NX3;H2,H1,H0;!$(N-C(=O));!$(N-C(=S));!$(N-S(=O)(=O));!$(N-a)][CX4]"
-         ), 10.5),
-        # Aniline-type: N bonded directly to an aromatic ring (and not an
-        # amide/sulfonamide). Conjugation with the ring delocalizes the
-        # lone pair, dropping basicity well below a plain aliphatic amine
-        # (aniline itself: pKaH ≈ 4.6, vs. ~10.5-10.8 for a trialkylamine).
-        ("aniline",
-         Chem.MolFromSmarts(
-             "[NX3;H2,H1,H0;!$(N-C(=O));!$(N-C(=S));!$(N-S(=O)(=O))]-a"
-         ), 4.6),
-        ("pyridine", Chem.MolFromSmarts("n1ccccc1"), 5.2),
-        # Imidazole: the pyridine-type ring nitrogen (2 ring bonds, lone
-        # pair not in the aromatic system — [nX2]) is the basic site; the
-        # pyrrole-type nitrogen ([nX3], H or alkyl-substituted) donates its
-        # lone pair into the ring and isn't basic. The previous pattern
-        # "n1cnc[nH]1" described a 5-ring with 3 nitrogens and 2 carbons —
-        # not imidazole's actual 2N/3C ring — so it never matched a real
-        # imidazole at all (confirmed: plain imidazole and several
-        # substituted variants all failed to match it). [nX2]/[nX3] here
-        # also matches N-alkylated imidazoles, not just the N-H tautomer.
-        # Known limitation: this pattern also matches the imidazole-type
-        # nitrogen in fused bicyclic systems like purines/xanthines (e.g.
-        # caffeine, theophylline). There, cross-ring conjugation with
-        # carbonyls on the *fused* ring (two bonds away via the ring-fusion
-        # carbon, not a direct neighbor) substantially reduces basicity in
-        # reality, but _basicity_penalty only inspects direct neighbors and
-        # can't see that. Confirmed: caffeine's pKa_basic estimate moves
-        # from 4.0 (undetected, old broken pattern) to 7.5 (detected, but
-        # too high — real caffeine pKaH ≈ 0.6, essentially non-basic).
-        # Not fixed here — properly excluding fused-ring imide systems
-        # needs testing against a broader purine/xanthine set
-        # (theophylline, theobromine, adenine, guanine, xanthine,
-        # allopurinol, ...) before trusting it.
-        ("imidazole", Chem.MolFromSmarts("[nX2]1cc[nX3]c1"), 7.5),
-        ("guanidine", Chem.MolFromSmarts("NC(=N)N"), 13.5),
-        ("amidine", Chem.MolFromSmarts("N=C(N)N"), 11.0),
-    ]
 
-    sites = []
-
-    for name, smarts, pka in patterns:
-        if smarts is None:
-            continue
-
-        for match in mol.GetSubstructMatches(smarts):
-            sites.append((match[0], pka, name))
-
-    # Deduplicate by atom index. A single nitrogen can produce multiple
-    # substructure matches for the *same* pattern — e.g. a triethylamino
-    # group matches "N bonded to CX4" three times, once per ethyl branch —
-    # which previously left duplicate entries for one physical atom in the
-    # site list. That inflated _ionization_profile() with phantom "extra"
-    # basic sites, which _estimate_logd() then treated as genuine secondary
-    # ionization centers (its polyamine-dampening term), measurably
-    # distorting logD for any simple tertiary/dialkylated amine (confirmed:
-    # triethylamine came out ~0.5 logD units too low from this alone).
-    # Keeping the first match per atom index is sufficient here since the
-    # patterns above are mutually exclusive per nitrogen type.
-    seen = {}
-    for atom_idx, base_pka, name in sites:
-        if atom_idx not in seen:
-            seen[atom_idx] = (atom_idx, base_pka, name)
-
-    return list(seen.values())
-
-def _basicity_penalty(atom, site_type: str) -> float:
+def _logd_from_pka(logp: float, pka: float, ph: float = 7.4) -> float:
     """
-    Smooth electronic penalty model (no hard tiers)
+    logD of a monoprotic base at `ph`:  logD = logP - log10(1 + 10^(pKa - pH)).
 
-    Penalty is meant to deprioritize basic sites that are
-    electronically deactivated by their local environment
-
-    site_type : the pattern name from _get_basic_sites (e.g.
-        'aliphatic_amine', 'aniline', 'pyridine', 'imidazole', ...).
-        For 'aniline', 'pyridine' and 'imidazole', adjacency to an
-        aromatic ring is definitional to the site type itself — it's
-        already what their calibrated base pKa reflects — so the
-        aromatic-neighbor penalty below is skipped for them. Applying it
-        anyway double-counts that conjugation effect: it previously
-        pushed plain pyridine's estimate down to pKa≈3.4 (real ≈5.2) and
-        would do the same to the aniline baseline (real ≈4.6). It still
-        applies to 'aliphatic_amine' (though after the exclusions in
-        _get_basic_sites those sites can no longer have an aromatic
-        direct neighbor at all), and to 'guanidine'/'amidine', where an
-        aromatic substituent is incidental rather than definitional and
-        genuinely does reduce basicity further.
+    Assumes only the neutral species partitions into octanol, one basic
+    centre (the database's most basic pKa), and no ionisable acidic group.
     """
-    p = 0.0
-    skip_aromatic_penalty = site_type in ("aniline", "pyridine", "imidazole")
+    return round(logp - math.log10(1.0 + 10 ** (pka - ph)), 3)
 
-    for nbr in atom.GetNeighbors():
 
-        if nbr.GetIsAromatic() and not skip_aromatic_penalty:
-            p += 0.9
+# Descriptors used as machine-learning features, in feature-vector order.
+# Deliberately excludes logD and pKa: both depend on the database pKa, which is
+# missing for most molecules and must not leak into the models.
+ML_DESCRIPTOR_NAMES = ["MW", "logP", "TPSA", "HBD", "HBA", "RotBonds", "QED"]
 
-        if nbr.GetAtomicNum() == 6:
-            for b in nbr.GetBonds():
-                o = b.GetOtherAtom(nbr)
-                if o.GetAtomicNum() == 8 and b.GetBondTypeAsDouble() == 2.0:
-                    p += 1.1 # this loop penalizes amides, esters and ketones due to conjugation
+# CNS MPO (Wager et al. 2010): six 0-1 terms, optimised when the sum is >= 4.0.
+_MPO_FULL_TERMS      = 6
+_MPO_FULL_THRESHOLD  = 4.0
 
-        if nbr.GetAtomicNum() in (7, 8, 9):
-            p += 0.25
 
-    return p
-    
-def _ionization_profile(mol):
-    """
-    Computes dominant + secondary protonation contributions.
-    Returns sorted list of effective site pKas.
-
-    The effective pKa is the base pKa minus the local electronic penalty.
-    The score is the effective pKa minus a mild physiological smoothing factor
-    (to prioritize sites that are closer to neutral at pH 7.4).
-    """
-
-    sites = _get_basic_sites(mol)
-
-    scored_sites = []
-
-    for atom_idx, base_pka, name in sites:
-        atom = mol.GetAtomWithIdx(atom_idx)
-
-        pka_eff = base_pka - _basicity_penalty(atom, name)
-
-        # mild physiological smoothing (CNS relevance)
-        score = pka_eff - abs(pka_eff - 7.4) * 0.15 # this factor is tuned to prioritize sites that are closer to neutral at pH 7.4
-
-        scored_sites.append((score, pka_eff))
-
-    # sort by relevance
-    scored_sites.sort(reverse=True, key=lambda x: x[0])
-
-    return scored_sites
-
-def _estimate_pka_basic(mol: Chem.Mol) -> float:
-    """
-    CNS MPO effective pKa:
-    dominant protonation site with improved micro-environment model
-    """
-
-    profile = _ionization_profile(mol)
-
-    if not profile: # No basic sites found
-        return 4.0
-
-    # dominant site (but NOT raw max; environment-weighted max)
-    _, pka = profile[0]
-
-    return round(pka, 2)
-
-def _estimate_logd(mol: Chem.Mol, logp: float) -> float:
-    """
-    Improved CNS-relevant logD model.
-    Uses dominant + secondary ionization effects.
-    """
-
-    profile = _ionization_profile(mol)
-
-    pH = 7.4
-
-    if not profile:
-        return round(logp, 3)
-
-    # dominant site
-    _, pka1 = profile[0]
-    frac1 = 1.0 / (1.0 + 10 ** (pH - pka1))
-
-    # secondary site dampening (important for polyamines)
-    '''
-    The following represents the Henderson-Hasselbalch equation,
-    which describes the relationship between pH, pKa and
-    the ratio of protonated to deprotonated species.
-    The factor of 0.5 is an empirical adjustment to account for
-    the reduced contribution of secondary sites to overall ionization.
-    '''
-    frac2 = 0.0
-    if len(profile) > 1:
-        _, pka2 = profile[1]
-        frac2 = 0.5 * (1.0 / (1.0 + 10 ** (pH - pka2)))
-    ionization = frac1 + frac2
-
-    logd = logp - ionization
-
-    return round(logd, 3)
-    
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def get_descriptor_profile(smiles: str) -> DescriptorProfile:
@@ -255,41 +100,81 @@ def get_descriptor_profile(smiles: str) -> DescriptorProfile:
     Compute all standard descriptors and return a DescriptorProfile.
     Lipinski / Veber rule checks are derived automatically by the dataclass.
 
+    pKa and logD are None unless the IUPAC-derived lookup has an entry for the
+    molecule; profile.pka_status says which case applies.
+
     Raises: InvalidSMILESError
     """
     mol  = _parse(smiles)
     logp = Descriptors.MolLogP(mol)
-    logd = _estimate_logd(mol, logp)
-    pka  = _estimate_pka_basic(mol)
-    logger.debug("Descriptor profile computed for '%s'", smiles)
+
+    match, status = _resolve_pka(mol)
+    pka  = match.pka if match else None
+    logd = _logd_from_pka(logp, pka) if pka is not None else None
+
+    logger.debug("Descriptor profile computed for '%s' (pKa status: %s)", smiles, status)
     return DescriptorProfile(
-        smiles    = smiles,
-        mw        = round(Descriptors.MolWt(mol), 2),
-        logp      = round(logp, 3),
-        logd      = logd,
-        tpsa      = round(rdMolDescriptors.CalcTPSA(mol), 2),
-        hbd       = rdMolDescriptors.CalcNumHBD(mol),
-        hba       = rdMolDescriptors.CalcNumHBA(mol),
-        rotbond   = Descriptors.NumRotatableBonds(mol),
-        qed       = round(QED.qed(mol), 4),
-        pka_basic = pka,
+        smiles     = smiles,
+        mw         = round(Descriptors.MolWt(mol), 2),
+        logp       = round(logp, 3),
+        logd       = logd,
+        tpsa       = round(rdMolDescriptors.CalcTPSA(mol), 2),
+        hbd        = rdMolDescriptors.CalcNumHBD(mol),
+        hba        = rdMolDescriptors.CalcNumHBA(mol),
+        rotbond    = Descriptors.NumRotatableBonds(mol),
+        qed        = round(QED.qed(mol), 4),
+        pka_basic  = pka,
+        pka_match  = match,
+        pka_status = status,
     )
+
+
+def get_ml_descriptors(smiles: str) -> list:
+    """
+    The physicochemical descriptors appended to the Morgan fingerprint as ML
+    features, in the order given by ML_DESCRIPTOR_NAMES:
+        MW, logP, TPSA, HBD, HBA, RotBonds, QED
+
+    Independent of any pKa lookup, so training and inference build identical
+    vectors for every molecule. This is the single source of truth for the
+    feature order used by ml_model.py, ml_predict.py and evaluation.py.
+
+    Raises: InvalidSMILESError
+    """
+    mol = _parse(smiles)
+    return [
+        Descriptors.MolWt(mol),
+        Descriptors.MolLogP(mol),
+        rdMolDescriptors.CalcTPSA(mol),
+        float(rdMolDescriptors.CalcNumHBD(mol)),
+        float(rdMolDescriptors.CalcNumHBA(mol)),
+        float(Descriptors.NumRotatableBonds(mol)),
+        QED.qed(mol),
+    ]
 
 
 def get_cns_mpo(smiles: str) -> CNSMPOResult:
     """
     Compute the CNS MPO score (Wager et al. 2010) and return a CNSMPOResult.
-    Each property contributes 0-1; score >= 4.0 = CNS-optimised.
+    Each property contributes 0-1.
+
+    The logD and pKa terms are scored only when the IUPAC-derived lookup has a
+    pKa for the molecule. Otherwise the score is taken over the four remaining
+    properties (MW, logP, TPSA, HBD): max_total is 4.0 and cns_optimised uses
+    the same proportion as the published 4.0-of-6 cut-off. Such a score is a
+    partial assessment, not directly comparable to a full six-term score.
 
     Raises: InvalidSMILESError
     """
     mol  = _parse(smiles)
     logp = Descriptors.MolLogP(mol)
-    logd = _estimate_logd(mol, logp)
     tpsa = rdMolDescriptors.CalcTPSA(mol)
     hbd  = rdMolDescriptors.CalcNumHBD(mol)
     mw   = Descriptors.MolWt(mol)
-    pka  = _estimate_pka_basic(mol)
+
+    match, status = _resolve_pka(mol)
+    pka  = match.pka if match else None
+    logd = _logd_from_pka(logp, pka) if pka is not None else None
 
     def d_mw(v):
         if v <= 360: return 1.0
@@ -323,17 +208,23 @@ def get_cns_mpo(smiles: str) -> CNSMPOResult:
         return round(1.0 - (v - 8) / 2, 4)
 
     s_mw, s_logp = d_mw(mw), d_logp(logp)
-    s_logd, s_tpsa = d_logd(logd), d_tpsa(tpsa)
-    s_hbd, s_pka  = d_hbd(hbd), d_pka(pka)
-    total = round(s_mw + s_logp + s_logd + s_tpsa + s_hbd + s_pka, 4)
+    s_tpsa, s_hbd = d_tpsa(tpsa), d_hbd(hbd)
+    s_logd = d_logd(logd) if logd is not None else None
+    s_pka  = d_pka(pka)   if pka  is not None else None
 
-    logger.debug("CNS MPO for '%s': %.3f/6", smiles, total)
+    scored    = [s_mw, s_logp, s_tpsa, s_hbd] + [t for t in (s_logd, s_pka) if t is not None]
+    total     = round(sum(scored), 4)
+    max_total = float(len(scored))
+    threshold = _MPO_FULL_THRESHOLD * max_total / _MPO_FULL_TERMS
+
+    logger.debug("CNS MPO for '%s': %.3f/%.0f (pKa status: %s)", smiles, total, max_total, status)
     return CNSMPOResult(
-        smiles=smiles, score_mw=s_mw, score_logp=s_logp, score_logd=s_logd,
-        score_tpsa=s_tpsa, score_hbd=s_hbd, score_pka=s_pka, total=total,
-        cns_optimised=total >= 4.0,
-        raw_mw=round(mw, 2), raw_logp=round(logp, 3), raw_logd=logd,
-        raw_tpsa=round(tpsa, 2), raw_hbd=hbd, raw_pka=round(pka, 2),
+        smiles=smiles, score_mw=s_mw, score_logp=s_logp, score_tpsa=s_tpsa,
+        score_hbd=s_hbd, score_logd=s_logd, score_pka=s_pka,
+        total=total, max_total=max_total, cns_optimised=total >= threshold,
+        raw_mw=round(mw, 2), raw_logp=round(logp, 3), raw_tpsa=round(tpsa, 2),
+        raw_hbd=hbd, raw_logd=logd, raw_pka=pka,
+        pka_match=match, pka_status=status,
     )
 
 
@@ -413,8 +304,7 @@ def resolve_smiles(user_input: str) -> tuple[str, str]:
 
     encoded = urllib.parse.quote(stripped)
 
-    # Use PubChem's fast structure lookup endpoint
-    # This hits a different CDN than the main PUG REST API
+    # PubChem PUG REST: compound name -> isomeric SMILES
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{encoded}/property/IsomericSMILES/TXT"
 
     try:
